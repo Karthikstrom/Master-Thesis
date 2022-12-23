@@ -16,7 +16,10 @@ def metrics(y_true,y_pred):
     mae=  mean_absolute_error(y_true,y_pred)
     mape= mean_absolute_percentage_error(y_true,y_pred)
     rmse= np.sqrt(mean_squared_error(y_true,y_pred))
-    return mae,mape,rmse
+    print("Mean Absolute Error=",mae)
+    print("Mean Absolute Percentage Error=",mape)
+    print("Root mean squared Error=",rmse)
+    #return mae,mape,rmse
 
 def load_data(d1,d2):
     df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\Database\Household_5_hourly.csv")
