@@ -23,7 +23,7 @@ from sklearn.preprocessing import RobustScaler,MinMaxScaler
 
 #%% Importing data after adding time index and removing Nan values
 df=pd.DataFrame()
-df['grid_import']=load_data('2015-11-01','2018-07-30')
+df['grid_import']=load_data('2015-11-01','2020-07-30')
 # till 2018-09 is good after that the pattern is repetative
 #%% Feature Engineering 
 df['hour']=df.index.hour
@@ -51,7 +51,7 @@ plt.show()
 #%% Visualization - Weekday/Weekend hues
 # seasonal hues, monthly hues
 #%% Box Plot to get an idea of the outliers
-sns.boxplot(x=df.index.year,y=df['grid_import'])
+sns.boxplot(x=df.index.hour,y=df['grid_import'])
 plt.show()
 #%% Splitting train and test dataset
 train,test=data_split(df,0.8)

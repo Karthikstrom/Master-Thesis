@@ -5,7 +5,7 @@ Created on Fri Dec 23 11:51:38 2022
 @author: Karthikeyan
 
 https://machinelearningmastery.com/how-to-develop-multilayer-perceptron-models-for-time-series-forecasting/
-
+a
 """
 #%% Importing packages
 
@@ -54,7 +54,7 @@ def split_sequence_multi(data,look_back,future_steps):
 
 #%% Single-Step Forecasting
 #%% Train-Test splitting 
-look_back_single=24
+look_back_single=168
 X_single,y_single=split_sequence_single(df,look_back_single)
 X_single=X_single.reshape(-1,look_back_single)
 y_single=y_single.flatten()
@@ -69,7 +69,7 @@ VMLP_model_single.add(Dense(1))
 VMLP_model_single.compile(optimizer='adam',loss='mse')
 
 
-VMLP_model_single_history=VMLP_model_single.fit(X_train_single,y_train_single,validation_data=(X_test_single,y_test_single),epochs=20)
+VMLP_model_single_history=VMLP_model_single.fit(X_train_single,y_train_single,validation_data=(X_test_single,y_test_single),epochs=100)
 # technically shuffle=False should give better results but here it is the opposite
 
 #%% Epochs vs Loss for Training and Validation
