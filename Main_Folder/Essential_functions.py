@@ -69,7 +69,7 @@ def train_val_test(data,split1,split2):
 
 def distribution_stats(data):
     stat,p=stats.normaltest(data)
-    alpha=0.05
+    alpha=0.04
     if p>alpha:
         print('Data looks Gaussian(Fail to reject HO)')
     else:
