@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Sun Jan  8 23:23:44 2023
+
+@author: Karthikeyan
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Tue Jan  3 13:18:02 2023
 
 @author: Karthikeyan
@@ -36,12 +43,12 @@ df=load_data2()
 
 #%% Feature Engineering
     #%%% Date/Time Related Features
-# df['hour']=df.index.hour
-# df['dayofweek']=df.index.dayofweek
-# df['month']=df.index.month
-# df['year']=df.index.year
-# df.loc[(df['dayofweek']== 0) | (df['dayofweek']== 6) ,'weekend']=1
-# df.loc[(df['dayofweek']!= 0) & (df['dayofweek']!= 6) ,'weekend']=0
+df['hour']=df.index.hour
+df['dayofweek']=df.index.dayofweek
+df['month']=df.index.month
+df['year']=df.index.year
+df.loc[(df['dayofweek']== 0) | (df['dayofweek']== 6) ,'weekend']=1
+df.loc[(df['dayofweek']!= 0) & (df['dayofweek']!= 6) ,'weekend']=0
    #%%% Lag features
 df['1_lag']=df['Global_active_power'].shift(1)
 df['2_lag']=df['Global_active_power'].shift(2)
@@ -168,7 +175,7 @@ norm_train_features=pd.DataFrame(norm_train_features)
 norm_val_features=pd.DataFrame(norm_val_features)
 norm_test_features=pd.DataFrame(norm_test_features)
 
-look_back=24
+look_back=1
 
 train_x,train_y=split_feature_single(norm_train_features,norm_train_tar,look_back)
 val_x,val_y=split_feature_single(norm_val_features,norm_val_tar,look_back)
@@ -182,7 +189,7 @@ lr = 0.0003
 adam = optimizers.Adam(lr)
 
 model_lstm = Sequential()
-model_lstm.add(LSTM(50, activation='relu', input_shape=(train_x.shape[1], train_x.shape[2])))
+model_lstm.add(Dense(50, activation='relu', input_shape=(train_x.shape[1], train_x.shape[2])))
 model_lstm.add(Dense(1))
 model_lstm.compile(loss='mse', optimizer=adam)
 model_lstm.summary()
@@ -190,8 +197,10 @@ model_lstm.summary()
 lstm_history = model_lstm.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=epochs, verbose=2)
     #%%% Predicting
 lstm_predict=model_lstm.predict(test_x)
+lstm_predict=np.reshape(lstm_predict,(-1,1))
 lstm_predict=scalar_tar.inverse_transform(lstm_predict)
-test_y=scalar_tar.inverse_transform(np.reshape(test_y,(-1,1)))
+test_y=np.reshape(test_y,(-1,1))
+test_y=scalar_tar.inverse_transform(test_y)
     #%%% Metrics
 metrics(test_y,lstm_predict)
 

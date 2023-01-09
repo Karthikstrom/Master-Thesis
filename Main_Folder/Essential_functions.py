@@ -10,6 +10,7 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
 from scipy import stats
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -23,13 +24,15 @@ def metrics(y_true,y_pred):
     mae=  mean_absolute_error(y_true,y_pred)
     mape= mean_absolute_percentage_error(y_true,y_pred)
     rmse= np.sqrt(mean_squared_error(y_true,y_pred))
+    r_2=r2_score(y_true,y_pred)
+    #r2
     print("Mean Absolute Error=",mae)
     print("Mean Absolute Percentage Error=",mape)
     print("Root mean squared Error=",rmse)
     #return mae,mape,rmse
 
 def load_data(d1,d2):
-    df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\Database\Household_5_hourly.csv")
+    df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\Database\Household_5_hourly.csv",low_memory=False)
     df['cet_cest_timestamp']=pd.to_datetime(df['cet_cest_timestamp'], format ='%Y-%m-%dT%H:%M:%S%z',utc=True)
     df=df.set_index(['cet_cest_timestamp'])
     df.index=df.index.tz_convert('CET')

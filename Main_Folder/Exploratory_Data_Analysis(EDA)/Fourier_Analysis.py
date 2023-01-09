@@ -48,7 +48,7 @@ tmp.sort_values(by=['y'], ascending=False).head()
 # Let's find the peaks with height_threshold >=0.05
 # Note: We use the magnitude (i.e the absolute value) of the Fourier transform
 
-height_threshold=3000 # We need a threshold. 
+height_threshold=2000 # We need a threshold. 
 
 
 # peaks_index contains the indices in x that correspond to peaks:

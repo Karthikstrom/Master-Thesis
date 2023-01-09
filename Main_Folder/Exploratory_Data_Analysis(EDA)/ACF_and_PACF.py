@@ -31,5 +31,5 @@ sns.set_style("whitegrid")
 #%% Read data
 df=load_data2()
 #%% Plot auto correlation and partial auto correlation
-plot_acf(df['Global_active_power'],lags=100)
-plot_pacf(df['Global_active_power'],lags=100)
+plot_acf(df['Global_active_power'],lags=20)
+plot_pacf(df['Global_active_power'],lags=20)

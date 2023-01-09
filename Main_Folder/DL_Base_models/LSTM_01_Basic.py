@@ -15,7 +15,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from Essential_functions import load_data2,train_val_test,split_sequence_single,epoch_vs_loss,metrics,split_feature_single
+
 
 from keras import optimizers
 from keras.utils import plot_model
@@ -30,6 +30,7 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+from Essential_functions import load_data2,train_val_test,split_sequence_single,epoch_vs_loss,metrics,split_feature_single
 #%% Read data
 df=load_data2()
 #%% LSTM
@@ -52,10 +53,16 @@ norm_test=pd.Series(norm_test.flatten())
 
 look_back=24
 
-train_x,train_y=split_sequence_single(train,look_back)
-val_x,val_y=split_sequence_single(val,look_back)
-test_x,test_y=split_sequence_single(test,look_back)
+train_x,train_y=split_sequence_single(norm_train,look_back)
+val_x,val_y=split_sequence_single(norm_val,look_back)
+test_x,test_y=split_sequence_single(norm_test,look_back)
 
+train_x=np.reshape(train_x,(train_x.shape[0],train_x.shape[1],1))
+#train_y=np.reshape(train_y,(train_y.shape[0],1,train_y.shape[1]))
+val_x=np.reshape(val_x,(val_x.shape[0],val_x.shape[1],1))
+#val_y=np.reshape(val_y,(val_y.shape[0],1,val_y.shape[1]))
+test_x=np.reshape(test_x,(test_x.shape[0],test_x.shape[1],1))
+#test_y=np.reshape(test_y,(test_y.shape[0],1,test_y.shape[1]))
     #%%% Building CNN Model
 epochs = 40
 batch = 256
@@ -64,24 +71,22 @@ adam = optimizers.Adam(lr)
 
 model_lstm = Sequential()
 model_lstm.add(LSTM(100, activation='relu', input_shape=(train_x.shape[1], train_x.shape[2])))
-model_lstm.add(Dense(32))
-model_lstm.add(Dense(16))
 model_lstm.add(Dense(1))
-model_lstm.compile(loss='mse', optimizer='adam')
+model_lstm.compile(loss='mse', optimizer=adam)
 model_lstm.summary()
     #%%% Training CNN Model
-lstm_history = model_lstm.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=epochs, verbose=1,batch_size=70,shuffle=False)
+lstm_history = model_lstm.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=epochs, verbose=2)
     #%%% Predicting
 lstm_predict=model_lstm.predict(test_x)
 lstm_predict=scalar.inverse_transform(lstm_predict)
-test_y=scalar.inverse_transform(test_y)
+test_y=scalar.inverse_transform(np.reshape(test_y,(-1,1)))
     #%%% Metrics
 metrics(test_y,lstm_predict)
 
 fig,ax=plt.subplots()
 ax.plot(test_y,label="Actual")
 ax.plot(lstm_predict,label="Predicted",color='r')
-plt.xlim(500,800)
+#plt.xlim(500,800)
 plt.legend()
 plt.show()
 
