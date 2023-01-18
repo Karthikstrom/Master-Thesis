@@ -29,6 +29,7 @@ def metrics(y_true,y_pred):
     print("Mean Absolute Error=",mae)
     print("Mean Absolute Percentage Error=",mape)
     print("Root mean squared Error=",rmse)
+    print("R Squared=",r_2)
     #return mae,mape,rmse
 
 def load_data(d1,d2):
@@ -63,6 +64,13 @@ def data_split(data,split):
     train,test=data.iloc[:train_size],data.iloc[train_size:]
     return train,test
 
+def data_split_array(data,split):
+    size=len(data)
+    train_size=int(split*size)
+    test_size=int(size-train_size)
+    train,test=data[:train_size,:],data[train_size:,:]
+    return train,test
+
 def train_val_test(data,split1,split2):
     size=len(data)
     train_size=int(split1*size)
@@ -86,6 +94,15 @@ def split_sequence_single(data,look_back):
     for i in range(len(data)-1-look_back):
         temp_x=data.iloc[i:i+look_back]
         y.append(data.iloc[i+look_back])
+        X.append(temp_x)
+    return np.asarray(X),np.asarray(y)
+
+def split_sequence_single_array(data,look_back):
+    X=[]
+    y=[]
+    for i in range(len(data)-1-look_back):
+        temp_x=data[i:i+look_back,0]
+        y.append(data[i+look_back,0])
         X.append(temp_x)
     return np.asarray(X),np.asarray(y)
 

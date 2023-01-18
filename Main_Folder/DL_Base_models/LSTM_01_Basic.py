@@ -26,6 +26,8 @@ from keras.layers import Dense, LSTM, RepeatVector, TimeDistributed, Flatten
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
+
+
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -38,7 +40,7 @@ df=load_data2()
     #Input shape [samples,timesteps,features]
 train,val,test=train_val_test(df,0.8,0.1)
 
-scalar=MinMaxScaler()
+scalar=MinMaxScaler()#std scalr
 scalar=scalar.fit(train)
 
 
@@ -86,7 +88,7 @@ metrics(test_y,lstm_predict)
 fig,ax=plt.subplots()
 ax.plot(test_y,label="Actual")
 ax.plot(lstm_predict,label="Predicted",color='r')
-#plt.xlim(500,800)
+plt.xlim(500,600)
 plt.legend()
 plt.show()
 

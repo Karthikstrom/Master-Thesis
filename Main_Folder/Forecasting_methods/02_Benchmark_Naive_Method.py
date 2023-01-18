@@ -33,10 +33,11 @@ df['shift_1']=df['Global_active_power'].shift(1)
 # df['shift_3']=df['Global_active_power'].shift(168)
 # df['shift_4']=df['Global_active_power'].shift(720)
 # df['shift_5']=df['Global_active_power'].shift(8760)
+df.dropna(inplace=True)
 #%% train,test split
-train,test=data_split(df,0.9)
+#train,test=data_split(df,0.9)
 #%% Metrics
-metrics(test['Global_active_power'],test['shift_1'])
+metrics(df['Global_active_power'],df['shift_1'])
 #%% Visualization
 fig,ax=plt.subplots()
 ax.plot(test.index,test['Global_active_power'],label="Actual")

@@ -126,7 +126,9 @@ Rolling Geometric Mean: Calculate the geometric mean of the values in a given wi
 (more robust to outliers)
 
 """
-df['rolling_mean']=df['Global_active_power'].rolling(168).mean()
+
+#should try the dpendence
+#df['rolling_mean']=df['Global_active_power'].rolling(168).mean()
 #df['rolling_std']=df['Global_active_power'].rolling(24).std()
 # df['rolling_max']=df['Global_active_power'].rolling(24).max()
 # df['rolling_min']=df['Global_active_power'].rolling(24).min()

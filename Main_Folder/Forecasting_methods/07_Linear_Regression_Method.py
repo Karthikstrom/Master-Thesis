@@ -17,6 +17,8 @@ import matplotlib.pyplot as plt
 
 import statsmodels.api as sm
 
+
+from sklearn.linear_model import LinearRegression
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -30,8 +32,58 @@ Looking at min and max there are outliers
 
 model should be robust to that
 """
-#%% Train test split
+#%% Feauture creation
+
+df['lag_1']=df['Global_active_power'].shift(1)
+df['rolling mean']=df['Global_active_power'].rolling(24).mean()
+df.dropna(inplace=True)
+
+
+
 train,test=data_split(df,0.9)
+
+y_train=pd.DataFrame()
+x_train=train.drop('Global_active_power',axis=1)
+y_train['Global_active_power']=train['Global_active_power']
+
+
+y_test=pd.DataFrame()
+X_test=test.drop('Global_active_power',axis=1)
+y_test['Global_active_power']=train['Global_active_power']
+
+#%% Building the model
+lr_model=LinearRegression()
+
+# X=np.asarray(train['lag_1'])
+# y=np.asarray(train['Global_active_power'])
+
+# X=np.reshape(X,(-1,1))
+# y=np.reshape(y,(-1,1))
+
+# X=np.reshape(np.asarray(train['lag_1']),(1,-1))
+# y=np.reshape(np.asarray(train['Global_active_power']),(1-1))
+
+
+lr_model.fit(x_train,y_train)
+#%% Predicting and 
+
+val=np.asarray(test['lag_1'])
+val=np.reshape(val,(-1,1))
+
+y_pred =lr_model.predict(val)
+test['y_pred']=y_pred
+
+#%% Metrics and plotting
+
+metrics(test['Global_active_power'],test['y_pred'])
+
+fig,ax=plt.subplots()
+ax.plot(test['Global_active_power'],label="Actual")
+ax.plot(test['y_pred'],label="Predicted",color='r')
+#plt.xlim(500,600)
+plt.legend()
+plt.show()
+
 #%% To check for outliers / Box plot 
 sns.boxplot(df['Global_active_power'])
 
@@ -40,7 +92,11 @@ The linear regression algorithm learns how to make a weighted sum from
 its input features. For two features, we would have:
 
     target = weight_1 * feature_1 + weight_2 * feature_2 + bias
-    
 
 """
+#%%
 
+# with sns.plotting_context("notebook",font_scale=2.5):
+#     g = sns.pairplot(dataset[['sqft_lot','sqft_above','price','sqft_living','bedrooms']], 
+#                  hue='bedrooms', palette='tab20',size=6)
+# g.set(xticklabels=[]);
