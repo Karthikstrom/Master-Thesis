@@ -34,7 +34,7 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from Essential_functions import load_data2,data_split,metrics,split_sequence_single
+from Essential_functions import load_data2,data_split,metrics,split_sequence_single_array
 
 from sklearn.svm import SVR
 import math
@@ -51,8 +51,8 @@ norm_train =scaler.fit_transform(train)
 norm_train =norm_train[~np.isnan(norm_train).any(axis=1)]
 norm_test  =scaler.transform(test)
 #%% Create input shape (batch,timesteps)/similar to MLP
-train_x,train_y=split_sequence_single(norm_train,24)
-test_x,test_y=split_sequence_single(norm_test,24)
+train_x,train_y=split_sequence_single_array(norm_train,24)
+test_x,test_y=split_sequence_single_array(norm_test,24)
 
 
 train_y,test_y=np.reshape(train_y,(-1,1)),np.reshape(test_y,(-1,1))

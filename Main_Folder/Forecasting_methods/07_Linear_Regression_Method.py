@@ -31,25 +31,39 @@ df=load_data2()
 Looking at min and max there are outliers
 
 model should be robust to that
+
+maybe multiple linear regression?
 """
 #%% Feauture creation
 
-df['lag_1']=df['Global_active_power'].shift(1)
-df['rolling mean']=df['Global_active_power'].rolling(24).mean()
-df.dropna(inplace=True)
+# df['lag_1']=df['Global_active_power'].shift(1)
+# #df['rolling mean']=df['Global_active_power'].rolling(24).mean()
+# df.dropna(inplace=True)
 
 
 
 train,test=data_split(df,0.9)
 
-y_train=pd.DataFrame()
-x_train=train.drop('Global_active_power',axis=1)
-y_train['Global_active_power']=train['Global_active_power']
+# y_train=pd.DataFrame()
+# x_train=train.drop('Global_active_power',axis=1)
+# y_train['Global_active_power']=train['Global_active_power']
 
 
-y_test=pd.DataFrame()
-X_test=test.drop('Global_active_power',axis=1)
-y_test['Global_active_power']=train['Global_active_power']
+# y_test=pd.DataFrame()
+# X_test=test.drop('Global_active_power',axis=1)
+# y_test['Global_active_power']=train['Global_active_power']
+
+#%%
+# SARIMA example
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+# fit model
+model = SARIMAX(train, order=(0, 1, 2), seasonal_order=(0, 0, 2, 24))
+model_fit = model.fit(disp=False)
+
+#%% 
+
+predictions = model_fit.predict(start=len(train), end=(len(train)+len(test)-1))
 
 #%% Building the model
 lr_model=LinearRegression()

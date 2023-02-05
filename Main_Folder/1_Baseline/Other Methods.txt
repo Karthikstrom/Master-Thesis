@@ -1,0 +1,2 @@
+- Average of each hour in the historical data
+- Drift? taking trend into account (May not be the simplest baseline)

@@ -1,0 +1,121 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jan 24 12:03:04 2023
+
+@author: Karthikeyan
+"""
+
+#%% Loading packages
+import os
+import sys
+import path
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+from Essential_functions import load_data2,metrics,data_split
+
+from keras.models import Sequential
+from keras.layers import Dense
+
+#%% Importing data
+df=load_data2()
+#%% Data Preparation - Multi Step
+
+def split_sequence_multi(data,look_back,future_steps):
+    X=[]
+    y=[]
+    for i in range(len(data)-look_back-future_steps):
+        x_temp=data[i:i+look_back]
+        y_temp=data[i+look_back:i+look_back+future_steps]
+        X.append(x_temp)
+        y.append(y_temp)
+    return np.asarray(X),np.asarray(y)
+
+#%% Train-Test splitting
+look_back_multi=24
+future_steps=24
+
+train_split=int(0.8*len(df))
+val_split=int(train_split+ 0.1*len(df))
+
+train=df[:train_split]
+val=df[train_split:val_split]
+test=df[val_split:]
+
+
+train_x,train_y=split_sequence_multi(train,look_back_multi,future_steps)
+val_x,val_y=split_sequence_multi(val,look_back_multi,future_steps)
+test_x,test_y=split_sequence_multi(test,look_back_multi,future_steps)
+
+
+
+train_x=np.reshape(train_x,(train_x.shape[0],train_x.shape[1]))
+train_y=np.reshape(train_y,(train_y.shape[0],train_y.shape[1]))
+
+val_x=np.reshape(val_x,(val_x.shape[0],val_x.shape[1]))
+val_y=np.reshape(val_y,(val_y.shape[0],val_y.shape[1]))
+
+test_x=np.reshape(test_x,(test_x.shape[0],test_x.shape[1]))
+test_y=np.reshape(test_y,(test_y.shape[0],test_y.shape[1]))
+
+#%% VMLP model compiling and fitting
+
+VMLP_model_multi=Sequential()
+VMLP_model_multi.add(Dense(64,activation='relu',input_dim=train_x.shape[1]))
+VMLP_model_multi.add(Dense(32))
+VMLP_model_multi.add(Dense(future_steps))
+VMLP_model_multi.compile(optimizer='adam',loss='mse')
+#VMLP_model_multi.fit(X_train_multi,y_train_multi,epochs=20)
+
+VMLP_model_multi_history=VMLP_model_multi.fit(train_x,train_y,validation_data=(val_x,val_y),epochs=100)
+
+#%% Epochs vs Loss for Training and Validation
+
+plt.plot(VMLP_model_multi_history.history['loss'], label='train')
+plt.plot(VMLP_model_multi_history.history['val_loss'], label='validation')
+plt.legend()
+plt.show()
+
+#%% VMLP Predicting
+y_pred_multi=VMLP_model_multi.predict(test_x)
+
+#%% Separating only the actual predicted vectors
+
+y_pred_multi_tar=y_pred_multi[::24]
+y_test_multi_tar=test_y[::24]
+
+#%% Flattening the predicted to 1_D array
+
+y_pred_flatten=y_pred_multi_tar.flatten()
+y_test_flatten=y_test_multi_tar.flatten()
+#%% VMLP Metrics
+metrics(y_test_flatten,y_pred_flatten)
+#%% Plotting 
+fig,ax=plt.subplots()
+ax.plot(y_test_flatten,label="Actual",color='b')
+ax.plot(y_pred_flatten,label="Predicted",color='r')
+plt.legend()
+plt.show()
+#%% Single day i/p, prediction and plotting
+day_ip=np.asarray(df.loc['2009-04-07'])
+day_op=np.asarray(df.loc['2009-04-08'])
+
+
+day_ip=np.reshape(day_ip,(-1,24))
+day_pred=VMLP_model_multi.predict(day_ip)
+day_pred=np.transpose(day_pred)
+fig,bx=plt.subplots()
+bx.plot(day_op,label="Actual")
+bx.plot(day_pred,label="Predicted",color='r')
+bx.legend()
+plt.show()
+
+metrics(day_op,day_pred)
+

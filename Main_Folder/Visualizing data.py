@@ -10,12 +10,10 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
+from Essential_functions import load_data2
+import matplotlib.dates as mdates
 #%% Importing data
-df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\Database\Household_5_hourly.csv")
-#%% Adding Datetime index
-df['cet_cest_timestamp']=pd.to_datetime(df['cet_cest_timestamp'], format ='%Y-%m-%dT%H:%M:%S%z',utc=True)
-df=df.set_index(['cet_cest_timestamp'])
-df.index=df.index.tz_convert('CET')
+df=load_data2()
 #%% Dropping all the columns except energy import
 df=df[['DE_KN_residential5_grid_import']]
 df.rename(columns={'DE_KN_residential5_grid_import':'grid_import'},inplace=True)
@@ -31,9 +29,14 @@ df['grid_import']=df['grid_import'].diff()
 #%% Removing Nan values
 df.dropna(inplace=True)
 #%% Plotting the whole data
-fig,ax=plt.subplots()
-#day=df.loc['2016-12-12':'2016-12-12']
-ax.plot(np.arange(0,24),df['grid_import'].loc['2016-06-12':'2016-06-12'])
+fig,a1=plt.subplots()
+a1.plot(df.resample('M').mean())
+
+a1.xaxis.set_major_formatter(mdates.DateFormatter('%m\n%Y'))
+plt.title("Consumption resample per monthly mean")
+plt.ylabel("Load consumption (Kwh)")
+#plt.tight_layout()
+plt.savefig("monthly_mean_consumption.jpeg",format="jpeg",dpi=500)
 plt.show()
 #%% Plotting weekly average
 fig,bx=plt.subplots()
@@ -53,3 +56,22 @@ df['grid_import'].groupby(df.index.strftime('%Y')).sum()
 fig,ex=plt.subplots()
 ex.plot(df['grid_import'].rolling(4*24*7).mean())
 plt.show()
+#%% Comparing performance
+
+# Make a random dataset:
+mae = [0.4065, 0.596, 0.4254, 0.3248, 0.3794,0.4465,0.3701]
+rmse = [0.531,0.7377,0.589,0.5605,0.4999,0.5709,0.5015]
+bars = ('LR', 'SARIMA', 'SVM','RF', 'MLP', 'CNN','LSTM')
+y_pos = np.arange(len(bars))
+
+# Create bars
+plt.bar(y_pos, rmse)
+
+# Create names on the x-axis
+plt.xticks(y_pos, bars)
+plt.title("Comparing performace (Root mean squared error)")
+plt.ylabel("Root mean squared error (Kwh)")
+plt.savefig("MAE_comparison.jpeg",dpi=500)
+# Show graphic
+plt.show()
+
