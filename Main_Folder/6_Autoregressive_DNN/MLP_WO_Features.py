@@ -57,7 +57,7 @@ ip_steps=24
 op_steps=1
 train_x,train_y=split_sequence_multi(train,ip_steps,op_steps)
 val_x,val_y=split_sequence_multi(val,ip_steps,op_steps)
-test_x,test_y=split_sequence_multi(test,ip_steps,op_steps)
+test_x,test_y=split_sequence_multi(test,ip_steps,24)
 
 train_y=np.reshape(train_y,(train_y.shape[0],train_y.shape[1]))
 val_y=np.reshape(val_y,(val_y.shape[0],val_y.shape[1]))
@@ -66,9 +66,11 @@ test_y=np.reshape(test_y,(test_y.shape[0],test_y.shape[1]))
 train_x=np.reshape(train_x,(train_x.shape[0],train_x.shape[1]))
 val_x=np.reshape(val_x,(val_x.shape[0],val_x.shape[1]))
 test_x=np.reshape(test_x,(test_x.shape[0],test_x.shape[1]))
+
+
 #%% Data check before inputing it to the model
 print("Feature input shape:", train_x.shape)
-print("Label shape:", train_y.shape)
+print("Target shape:", train_y.shape)
 #%% MLP model
 model_mlp = Sequential()
 model_mlp.add(Dense(64,activation='relu',input_dim=train_x.shape[1]))
@@ -84,14 +86,14 @@ plt.plot(mlp_history.history['val_loss'], label='validation')
 plt.legend()
 plt.show()
 #%%% Predicting and rescaling
-
 test_x_mlp=test_x[::24]
+test_y=test_y[::24]
 pred_op_mlp=[]
 for i in range(test_x_mlp.shape[0]): #first loop to run every ip sequence(24 hours)
     temp_x_mlp=test_x_mlp[i]
     temp_pred_op_mlp=[]
     for j in range(24): #second loop to regressivly predict next hours in a day
-            temp_x_mlp=np.reshape(temp_x_mlp,(1,-1,1))
+            temp_x_mlp=np.reshape(temp_x_mlp,(1,-1))
             temp_pred1_mlp=model_mlp.predict(temp_x_mlp)
             temp_pred_op_mlp=np.append(temp_pred_op_mlp,temp_pred1_mlp)
             temp_x_mlp=np.append(temp_x_mlp,temp_pred1_mlp)
@@ -99,9 +101,9 @@ for i in range(test_x_mlp.shape[0]): #first loop to run every ip sequence(24 hou
     pred_op_mlp=np.append(pred_op_mlp,temp_pred_op_mlp)
     temp_pred_op_mlp=[]
 
-test_x_mlp=np.reshape(test_x_mlp,(-1))
-#%%
-test_temp=np.reshape(test_x_mlp,(-1,1))
+#test_x_mlp=np.reshape(test_x_mlp,(-1))
+#%% Reshaping and inversing
+test_temp=np.reshape(test_y,(-1,1))
 pred_temp=np.reshape(pred_op_mlp,(-1,1))
 test_x_mlp=scaler.inverse_transform(test_temp)
 pred_op_mlp=scaler.inverse_transform(pred_temp)

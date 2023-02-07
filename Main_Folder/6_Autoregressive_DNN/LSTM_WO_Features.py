@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb  3 16:49:46 2023
+Created on Sat Feb  4 17:25:41 2023
 
 @author: Karthikeyan
 """
@@ -63,44 +63,38 @@ val_y=np.reshape(val_y,(val_y.shape[0],val_y.shape[1]))
 test_y=np.reshape(test_y,(test_y.shape[0],test_y.shape[1]))
 #%% Data check before inputing it to the model
 print("Feature input shape:", train_x.shape)
-print("Label shape:", train_y.shape)
+print("Target shape:", train_y.shape)
+#%%LSTM model
+lstm_model=Sequential()
+lstm_model.add(LSTM(120, activation='relu', input_shape=(train_x.shape[1], train_x.shape[2])))
+lstm_model.add(Dense(6))
+lstm_model.add(Dense(op_steps))
+lstm_model.compile(loss='mse', optimizer='adam')
+lstm_model.summary()
 
-#%% CNN Model
-cnn_model=Sequential()
-cnn_model.add(Conv1D(filters=64, kernel_size=2, activation='relu', input_shape=(train_x.shape[1],train_x.shape[2])))
-cnn_model.add(MaxPooling1D(pool_size=2))
-cnn_model.add(Flatten())
-cnn_model.add(Dense(50, activation='relu'))
-cnn_model.add(Dense(op_steps))
-cnn_model.compile(loss='mse', optimizer='adam')
-cnn_model.summary()
+lstm_history =lstm_model.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=4, verbose=2)
 
-cnn_history =cnn_model.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=10, verbose=2)
-
-plt.plot(cnn_history.history['loss'], label='train')
-plt.plot(cnn_history.history['val_loss'], label='validation')
+plt.plot(lstm_history.history['loss'], label='train')
+plt.plot(lstm_history.history['val_loss'], label='validation')
 plt.legend()
 plt.show()
+
 #%%% Predicting and rescaling
 
 #To isolate the 24 hour windows
-# if ((len(test_x)%24) == 0):
-#     test_x_cnn=test_x[::24] 
-# else:
-#     test_x_cnn=test_x[::24]
-#     test_x_cnn=test_x_cnn[:-1]
-test_x_cnn=test_x[::24] 
-test_y=test_y[::24]
+test_x=test_x[::24]
+test_y=test_y[::24]     #will have to window this
+
 #empty list for final output
 pred_op=[]
 
-for i in range(test_x_cnn.shape[0]): #first loop to run every ip sequence(24 hours)
-    temp_x=test_x_cnn[i]#induvudual sequence
+for i in range(test_x.shape[0]): #first loop to run every ip sequence(24 hours)
+    temp_x=test_x[i]#induvudual sequence
     temp_pred_op=[]#saving output of each 24 hour future
     for j in range(24): #second loop to regressivly predict next hours in a day
-            #reshape to CNN ip shape   
+            #reshape to LSTM ip shape   
             temp_x=np.reshape(temp_x,(1,-1,1))
-            temp_pred1=cnn_model.predict(temp_x)
+            temp_pred1=lstm_model.predict(temp_x)
             #appending output of the next day iteratively
             temp_pred_op=np.append(temp_pred_op,temp_pred1)
             #changing the input window by adding the predicted and removing
@@ -109,19 +103,24 @@ for i in range(test_x_cnn.shape[0]): #first loop to run every ip sequence(24 hou
             temp_x=temp_x[1:]
     # 24 hours once a list is append
     pred_op=np.append(pred_op,temp_pred_op)
+#%% Inversing
 
-#%% Reshaping and rescaling
 temp_test=np.reshape(test_y,(-1,1))
 temp_pred=np.reshape(pred_op,(-1,1))
-
-test_y_cnn=scaler.inverse_transform(temp_test)
+test_y_lstm=scaler.inverse_transform(temp_test)
 pred_op=scaler.inverse_transform(temp_pred)
-#%% Metrics and plotting
-metrics(test_y_cnn,pred_op)
+
+#%%% Plotting and metrics
+metrics(test_y_lstm,pred_op)
 
 fig,bx=plt.subplots()
-bx.plot(test_y_cnn,label="Actual",color='b')
+bx.plot(test_y_lstm,label="Actual",color='b')
 bx.plot(pred_op,label="Predicted",color='r')
-#plt.xlim(800,1000)
+plt.xlim(800,1000)
 plt.legend()
 plt.show()
+
+
+
+
+

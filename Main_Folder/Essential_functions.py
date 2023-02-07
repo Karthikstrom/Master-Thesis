@@ -18,7 +18,7 @@ from sklearn.preprocessing import MinMaxScaler
 sns.set_context('notebook')
 sns.set_style("whitegrid")
 
-
+#%%
 def metrics(y_true,y_pred):
     y_true,y_pred=np.array(y_true), np.array(y_pred)
     mae=  mean_absolute_error(y_true,y_pred)
@@ -32,16 +32,6 @@ def metrics(y_true,y_pred):
     print("R Squared=",r_2)
     #return mae,mape,rmse
 
-def load_data(d1,d2):
-    df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\Database\Household_5_hourly.csv",low_memory=False)
-    df['cet_cest_timestamp']=pd.to_datetime(df['cet_cest_timestamp'], format ='%Y-%m-%dT%H:%M:%S%z',utc=True)
-    df=df.set_index(['cet_cest_timestamp'])
-    df.index=df.index.tz_convert('CET')
-    df=df[['DE_KN_residential5_grid_import']]
-    df.rename(columns={'DE_KN_residential5_grid_import':'grid_import'},inplace=True)
-    df['grid_import']=df['grid_import'].diff()
-    df.dropna(inplace=True)
-    return df['grid_import'][d1:d2]
 
 def load_data2():
     df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Database\kaggle_household_power_consumption.txt",delimiter=';')
@@ -55,6 +45,15 @@ def load_data2():
     df_hourly['Global_active_power']=df['Global_active_power'].resample('H').mean()
     df_hourly['Global_active_power'].interpolate(method='time',inplace=True)
     df_hourly=df_hourly.loc['2007':]
+    return df_hourly
+
+def load_data():
+    df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Load_NL_Grouped.csv")
+    df['Datetime']=pd.to_datetime(df['Time-date'],format='%d-%m-%Y %H:%M')
+    df.drop('Time-date',axis=1,inplace=True)
+    df.set_index('Datetime',inplace=True)
+    df_hourly=pd.DataFrame()
+    df_hourly['Load']=df['Load'].resample('H').mean()
     return df_hourly
 
 def data_split(data,split):
