@@ -34,12 +34,12 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from Essential_functions import load_data2,data_split,metrics,split_sequence_single_array
+from Essential_functions import load_data2,data_split,metrics,split_sequence_single_array,load_data
 
 from sklearn.svm import SVR
 import math
 #%% Reading data
-df=load_data2()
+df=load_data()
 #%% Creating features
 dft=df.copy()
 dft['lag_1']=dft['Global_active_power'].shift(1)

@@ -23,12 +23,12 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from Essential_functions import load_data2,data_split,metrics
+from Essential_functions import load_data2,data_split,metrics,load_data
 
 #%% Reading data
-df=load_data2()
+df=load_data()
 #%% Shift one time step behind (use previous time step as a input for for the predicted value)
-df['shift_1']=df['Global_active_power'].shift(24)
+df['shift_1']=df['Load'].shift(24)
 # df['shift_2']=df['Global_active_power'].shift(24)
 # df['shift_3']=df['Global_active_power'].shift(168)
 # df['shift_4']=df['Global_active_power'].shift(720)
@@ -37,8 +37,8 @@ df.dropna(inplace=True)
 #%% train,test split
 train,test=data_split(df,0.9)
 #%% Metrics
-print("Train data metrics",metrics(train['Global_active_power'],train['shift_1']))
-print("Test data metrics",metrics(test['Global_active_power'],test['shift_1']))
+print("Train data metrics",metrics(train['Load'],train['shift_1']))
+print("Test data metrics",metrics(test['Load'],test['shift_1']))
 #%% Visualization
 # fig,ax=plt.subplots()
 # ax.plot(test.index,test['Global_active_power'],label="Actual")

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 """
 Created on Wed Jan  4 01:39:34 2023
 
@@ -19,14 +19,14 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from Essential_functions import load_data2
+from Essential_functions import load_data2,load_data
 
 from numpy.fft import rfft, irfft, rfftfreq
 from scipy import pi, signal, fftpack
 from scipy.signal import find_peaks
 
 #%% Read data
-df=load_data2()
+df1=load_data()
 #%%
 n = len(df1['diff2'])
 power_ft = np.abs(rfft(df1['diff2']))

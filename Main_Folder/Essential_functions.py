@@ -31,7 +31,17 @@ def metrics(y_true,y_pred):
     print("Root mean squared Error=",rmse)
     print("R Squared=",r_2)
     #return mae,mape,rmse
-
+    
+def load_data():
+    df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Load_NL_Grouped.csv")
+    df['Datetime']=pd.to_datetime(df['Time-date'],format='%d-%m-%Y %H:%M')
+    df.drop('Time-date',axis=1,inplace=True)
+    df.set_index('Datetime',inplace=True)
+    df_hourly=pd.DataFrame()
+    df_hourly['Load']=df['Load'].resample('H').sum()
+    df_hourly[df_hourly['Load'].isin([0])]=np.nan
+    df_hourly['Load'].interpolate(method='time',inplace=True)
+    return df_hourly
 
 def load_data2():
     df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Database\kaggle_household_power_consumption.txt",delimiter=';')
@@ -45,15 +55,6 @@ def load_data2():
     df_hourly['Global_active_power']=df['Global_active_power'].resample('H').mean()
     df_hourly['Global_active_power'].interpolate(method='time',inplace=True)
     df_hourly=df_hourly.loc['2007':]
-    return df_hourly
-
-def load_data():
-    df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Load_NL_Grouped.csv")
-    df['Datetime']=pd.to_datetime(df['Time-date'],format='%d-%m-%Y %H:%M')
-    df.drop('Time-date',axis=1,inplace=True)
-    df.set_index('Datetime',inplace=True)
-    df_hourly=pd.DataFrame()
-    df_hourly['Load']=df['Load'].resample('H').mean()
     return df_hourly
 
 def data_split(data,split):
