@@ -85,7 +85,7 @@ def SOC(soc_last,pb_imp,pb_exp,eff_imp,eff_exp):
 # Function to compute output with one time step as input not vectorized
 def PV_BES(pv,load,soc,pb_im,pb_out):
     
-    #conditions
+    #conditions/ add battery constraints
     c1= pv>=load
     c2= pv-load>=pb_in
     c3= (pv-load-pb_in)>=ps_max
@@ -94,12 +94,19 @@ def PV_BES(pv,load,soc,pb_im,pb_out):
     
     #choices
     ch1= ps_max
-    ch2= pv-load-pb_im-ps_max
-    ch3= pv-load-pb_im
+    ch2= pv-load-pb_im-ps_max #pb_in?
+    ch3= pv-load-pb_im # pb_in?
     ch4= pv-load
-    ch5= pv+pb_exp-load
+    ch5= pv+pb_exp-load # pb_out?
     ch6= load-pv
-
+    
+    ps=ch3 if (c1==True) & (c2==True) & (c3==False) else None
+    ps=ch1 if (c1==True) & (c2==True) & (c3==True) else None
+    pp=ch5 if (c1==False) & (c4==False) else None
+    pd=ch2 if (c1==True) & (c2==True) & (c3==True) else None
+    p_imp=ch4 if (c1==True) & (c2==False) else None 
+    p_exp=ch6 if (c1==True) & (c4==True) else None
+    
     return ps,pp,pd,p_imp,p_exp
 
 #%% PV only
