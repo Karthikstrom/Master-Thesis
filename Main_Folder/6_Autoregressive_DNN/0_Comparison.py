@@ -252,23 +252,23 @@ path= r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\6_Autoregr
 #MAE
 plt.bar(y_pos,mae)
 plt.xticks(y_pos,x_ticks, rotation=45)
-plt.ylabel("MAE")
-plt.title("Single Shot Mean Absolute Error Comparison")
-plt.savefig(path,'MAE_Comparison.jpeg',dpi=500)
+plt.ylabel("MAE(KW)")
+plt.title("Regressive Mean Absolute Error Comparison")
+plt.savefig(path + r"MAE_Comparison.jpeg",dpi=500)
 plt.show()
 
 #MAPE
 plt.bar(y_pos,mape)
 plt.xticks(y_pos,x_ticks, rotation=45)
 plt.ylabel("MAPE(%)")
-plt.title("Single Shot Mean Absolute Percentage Error Comparison")
-plt.savefig(path,'MAPE_Comparison.jpeg',dpi=500)
+plt.title("Regressive Mean Absolute Percentage Error Comparison")
+plt.savefig(path + r"MAPE_Comparison.jpeg",dpi=500)
 plt.show()
 
 #RMSE
 plt.bar(y_pos,rmse)
 plt.xticks(y_pos,x_ticks, rotation=45)
-plt.ylabel("RMSE")
-plt.title("Single Shot Root Mean squared Error Comparison")
-plt.savefig(path,'RMSE_Comparison.jpeg',dpi=500)
+plt.ylabel("RMSE(KW)")
+plt.title("Regressive Root Mean squared Error Comparison")
+plt.savefig(path + r"RMSE_Comparison.jpeg",dpi=500)
 plt.show()

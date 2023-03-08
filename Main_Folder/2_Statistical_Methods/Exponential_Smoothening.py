@@ -26,6 +26,7 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.holtwinters import SimpleExpSmoothing
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
+from statsmodels.tsa.seasonal import STL
 
 #%% Read data
 df=load_data()
@@ -43,8 +44,32 @@ Conclusion:
     -Determining optimum lambda value
 """
 
-#%% STL 
-decompose_result = seasonal_decompose(df['Load'],model='multiplicative')
+#%% Naive STL
+
+"""
+Additive decomposition is a method in which the components of the time series
+ are added together to obtain the observed data. This approach assumes that
+ the magnitude of the seasonal fluctuations does not depend on the level of
+ the time series, and that the overall trend of the series is linear
+ 
+ 
+Multiplicative decomposition is a method in which the components of the time
+ series are multiplied together to obtain the observed data. This approach
+ assumes that the magnitude of the seasonal fluctuations is proportional to the
+ level of the time series, and that the overall trend of the series is nonlinear
+
+
+*Moving average of span --> Naive trend
+Average of cyclic components --> Seasonalities
+
+"""
+
+"""
+periods?
+how to incorporate multiple seasonalities?
+
+"""
+decompose_result = seasonal_decompose(df['Load'],model='multiplicative',period=8760)
 df_stl=pd.DataFrame()
 df_stl['residual']=decompose_result.resid
 df_stl['trend']=decompose_result.trend
@@ -55,11 +80,19 @@ Conclusion:
     -Residual still has seasonalities
     -MSTL is a good way forward
 """
+
+#%% STL Loess
+stlloess=STL(df['Load']).fit()
+stlloess.plot()
+plt.show()
+#%% MSTL (Multiple Seasonal-Trend decomposition using Loess)
+
+
 #%% SMA (Simple Moving average)
 df_sma=df.copy()
-df_sma['12_SMA']=df_sma['Load'].rolling(2).mean()
-df_sma['24_SMA']=df_sma['Load'].rolling(24).mean()
-df_sma['48_SMA']=df_sma['Load'].rolling(48).mean()
+df_sma['12_SMA']=df_sma['Load'].rolling(24).mean()
+#df_sma['24_SMA']=df_sma['Load'].rolling(24).mean()
+#df_sma['48_SMA']=df_sma['Load'].rolling(48).mean()
 df_sma.dropna(inplace=True)
 
 """
@@ -82,14 +115,36 @@ Triple exponential smoothing is best suited for this kind of timeseries data.
 Holt winters has all the three variations - Single, Double and Triple 
 exponential smoothing.
 
+Here past 24 hour values are weighted summed with exponential reducting weights
+going back
+
+
 Conclusion
 
 """
+
 #%% Holt Winters
 df_hw=df.copy()
 span=24
 alpha = 2/(span+1)
+
+"""
+In Holt-Winters forecasting, "alpha" is a smoothing parameter used to calculate
+the level component of the time series. It controls the rate at which the 
+exponential weighted moving average (EWMA) reacts to new observations.
+
+Alpha is a value between 0 and 1, where a smaller alpha will give more weight 
+to past observations, resulting in a smoother forecast, and a larger alpha will
+give more weight to recent observations, resulting in a forecast that is more 
+sensitive to short-term changes in the data.
+
+"""
 #%%% Single Smoothening (Same as ewma)
+"""
+optimized = False --> alpha is constant
+fitted values shifted to adjust the result
+
+"""
 df_hw['ses']=SimpleExpSmoothing(df_hw['Load']).fit(smoothing_level=alpha,optimized=False).fittedvalues.shift(-1)
 plt.plot(df_hw[:100])
 plt.show()
@@ -101,4 +156,3 @@ plt.show()
 df_hw['tes']=ExponentialSmoothing(df_hw['Load'],trend='mul',seasonal='mul',seasonal_periods=24).fit().fittedvalues
 plt.plot(df_hw[:100])
 plt.show()
-#%% 

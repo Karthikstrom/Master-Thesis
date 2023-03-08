@@ -43,6 +43,16 @@ def load_data():
     df_hourly['Load'].interpolate(method='time',inplace=True)
     return df_hourly
 
+def load_wholedata():
+    df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Database\Whole_data.csv")
+    df['Datetime']=pd.to_datetime(df['date_time'], infer_datetime_format=True)
+    df.drop('date_time',axis=1,inplace=True)
+    df.set_index('Datetime',inplace=True)
+    df.columns=['RTP','TOU','Load','PV']
+    df['Load']= df['Load']/1000
+    df['PV']=df['PV']/1000
+    return df
+
 def load_data2():
     df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Database\kaggle_household_power_consumption.txt",delimiter=';')
     df['date_time']=pd.to_datetime(df['Date']+' '+df['Time'])
@@ -138,16 +148,6 @@ def normalization(data):
    return data
 
 
-def distribution_plots(data):
-    sns.distplot(data)
-    #box
-    #violin
-    #probplot?
-    #distplot
-    #factorplot
+def iterative_prediction(model,test_data,window,future_steps):
+    prediction_op=[]
     return 1
-
-def stationary_test():
-    #dickie fuller
-    
-    return 2
