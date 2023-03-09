@@ -28,8 +28,8 @@ from scipy.signal import find_peaks
 #%% Read data
 df1=load_data()
 #%%
-n = len(df1['diff2'])
-power_ft = np.abs(rfft(df1['diff2']))
+n = len(df1['Load'])
+power_ft = np.abs(rfft(df1['Load']))
 power_freq = rfftfreq(n)
 
 plt.figure(figsize=(10, 7))
@@ -37,18 +37,11 @@ plt.plot(power_freq[2:], power_ft[2: ])
     
 plt.xlabel('frequency (1/hour)')
 plt.show()
-
-#%%
-
-tmp = pd.DataFrame({'freqency [1/hour]':power_freq[2: ], 'y':power_ft[2: ]})
-tmp['period [hours]'] = (1/tmp['freqency [1/hours]'])
-
-tmp.sort_values(by=['y'], ascending=False).head()
 #%%
 # Let's find the peaks with height_threshold >=0.05
 # Note: We use the magnitude (i.e the absolute value) of the Fourier transform
 
-height_threshold=600 # We need a threshold. 
+height_threshold=200000 # We need a threshold. 
 
 
 # peaks_index contains the indices in x that correspond to peaks:
@@ -73,3 +66,23 @@ plt.plot(power_freq, np.abs(power_ft),'-', power_freq[peaks_index],properties['p
 plt.xlabel("Frequency")
 plt.ylabel("Amplitude")
 plt.show()
+
+
+"""
+If a signal has a high magnitude frequency and half of that frequency has 
+a high magnitude, it could indicate that the signal is a harmonic signal, 
+which means that it is composed of multiple sinusoidal waves with frequencies 
+that are integer multiples of a fundamental frequency.
+
+In this case, the high magnitude frequency could be the fundamental frequency,
+ and the frequency with half of that magnitude could be the second harmonic 
+ frequency (i.e., twice the fundamental frequency).
+
+Alternatively, the signal could also be a modulated signal, where the high
+ magnitude frequency represents the carrier signal and the frequency with half 
+ of that magnitude represents the modulation signal. This would indicate that
+ the signal has been modulated using amplitude modulation, where the amplitude
+ of the carrier signal varies in proportion to the amplitude of the modulation 
+ signal.
+
+"""

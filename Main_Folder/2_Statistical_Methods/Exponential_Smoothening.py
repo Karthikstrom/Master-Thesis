@@ -28,6 +28,11 @@ from statsmodels.tsa.holtwinters import SimpleExpSmoothing
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from statsmodels.tsa.seasonal import STL
 
+from statsmodels.tsa.seasonal import MSTL
+from statsmodels.tsa.seasonal import DecomposeResult
+
+import pickle
+
 #%% Read data
 df=load_data()
 #%% Hodrick Prescott Filter (Decomposing the data into trend and seasonalities)
@@ -82,12 +87,31 @@ Conclusion:
 """
 
 #%% STL Loess
-stlloess=STL(df['Load']).fit()
+
+#here daily seasonality is extracted and yearly seasonality is the trend
+stlloess=STL(df['Load'],period=23,seasonal=167,trend=8759).fit()
 stlloess.plot()
 plt.show()
 #%% MSTL (Multiple Seasonal-Trend decomposition using Loess)
 
+"""
+Things to explore
+-lambda
+-
+"""
+mstl = MSTL(df['Load'], periods=[24, 24 * 7,24 * 365],
+            stl_kwargs={
+                "trend":10001, # Setting this large will force the trend to be smoother.
+                "seasonal_deg":0, # Means the seasonal smoother is fit with a moving average.
+               })
+res = mstl.fit()
 
+#%% Saving the MSTL Model
+#filename='MSTL1.sav'
+filename='MSTL2.sav'
+pickle.dump(res,open(filename,'wb'))
+
+mst=pickle.load(open('MSTL1.sav','rb'))
 #%% SMA (Simple Moving average)
 df_sma=df.copy()
 df_sma['12_SMA']=df_sma['Load'].rolling(24).mean()

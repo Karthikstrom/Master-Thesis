@@ -49,6 +49,7 @@ def PV_only(pv,load,rtp,tou,ps_max,pv_p):
     print("RTP total cost: {:.2f}".format(df['RTP_Scenario'].sum()),'\u20AC')
     return TOU_Sum
 
+#%%
 """
 -------------------------------------------------------------------------------
 """
@@ -65,7 +66,8 @@ Pb_max - Maximum available power of the battery---->?
 h=1 # because time step is one hour?
 eff_imp=0.9 
 eff_exp=0.8
-pb_max=5 #-----??
+pb_max=5
+pb_min=1 #-----??
 soc_max=0.9
 soc_min=0.1
 E_b=100
@@ -78,28 +80,31 @@ pb_in_func = lambda pb_max,E_b,soc,soc_max: min(pb_max,(E_b/h)*(soc_max-soc))
 # Available output power of the battery
 pb_out_func= lambda pb_max,E_b,soc,soc_min: min(pb_max,(E_b/h)*(soc-soc_min))
 
-def SOC(soc_last,pb_imp,pb_exp,eff_imp,eff_exp):
-    soc_temp=soc_last + ((pb_imp*eff_imp)-(pb_exp/eff_exp))/(E_b/h)
+def SOC(soc_last,pb_min,pb_max,eff_imp,eff_exp):
+    soc_temp=soc_last + ((pb_min*eff_imp)-(pb_max/eff_exp))/(E_b/h)# double check
     return soc_temp
 
 # Function to compute output with one time step as input not vectorized
-def PV_BES(pv,load,soc,pb_im,pb_out):
+def PV_BES(pv,load,soc,pb_in,pb_out):
     
-    #conditions/ add battery constraints
+    #conditions
     c1= pv>=load
     c2= pv-load>=pb_in
     c3= (pv-load-pb_in)>=ps_max
     c4= pb_out>=load-pv
     
-    
+    #design constraints
+    #dc1= how to find pv_max? - should know the installed capacity first
+      
     #choices
     ch1= ps_max
-    ch2= pv-load-pb_im-ps_max #pb_in?
-    ch3= pv-load-pb_im # pb_in?
+    ch2= pv-load-pb_in-ps_max
+    ch3= pv-load-pb_in
     ch4= pv-load
-    ch5= pv+pb_exp-load # pb_out?
+    ch5= pv+pb_out-load
     ch6= load-pv
     
+    #mapping conditions and choices
     ps=ch3 if (c1==True) & (c2==True) & (c3==False) else None
     ps=ch1 if (c1==True) & (c2==True) & (c3==True) else None
     pp=ch5 if (c1==False) & (c4==False) else None
@@ -110,8 +115,8 @@ def PV_BES(pv,load,soc,pb_im,pb_out):
     return ps,pp,pd,p_imp,p_exp
 
 #%% PV only
-grid_limit=1 # max sent back to grid is 0.077KW
-pv_penetration=5 # change this to increse in 10% steps
+grid_limit=3 # max sent back to grid is 0.077KW
+pv_penetration=6 # change this to increse in 10% steps
 df_pvo=PV_only(df['PV'],df['Load'],df['RTP'],df['TOU'],grid_limit,pv_penetration)
 
 #%% finding optimum values
@@ -139,7 +144,7 @@ df_final.drop('iter',axis=1,inplace=True)
 soc=0.2
 
 #intializing needed columns to zero to append the values later
-df[['pb_in','pb_out','ps','pp','pd','p_imp','p_exp','soc']]
+df[['pb_in','pb_out','ps','pp','pd','p_imp','p_exp','soc']]=0
 
 #iterrows iterates through each row separately
 for index, row in df.iterrows():
@@ -167,7 +172,7 @@ for index, row in df.iterrows():
     df.at[index,'p_out']=p_exp
         
     #update SOC
-    soc=SOC(soc,pb_imp,pb_exp,eff_imp,eff_exp)
+    soc=SOC(soc,pb_min,pb_max,eff_imp,eff_exp)
     
     #appending soc values to the df
     df.at[index,'soc']=soc
