@@ -157,7 +157,6 @@ for index, row in df.iterrows():
     df.at[index, 'pb_out'] = pb_out
     
     #control strategy
-    #ps,pp,pd,p_imp,p_exp=PV_BES(pv,load,soc,pb_in,pb_out)
     pp,p_exp,p_imp,ps,pd=PV_BES(pv,load,soc,pb_in,pb_out)
     
     #appending the output from control strategy
@@ -168,12 +167,12 @@ for index, row in df.iterrows():
     df.at[index,'ps']=ps
     df.at[index,'pd']=pd
      
-    #appending soc values to the df
-    df.at[index,'soc']=soc
     
     #update SOC
     soc=SOC(soc,p_imp,p_exp)
 
+    #appending soc values to the df
+    df.at[index,'soc']=soc
 
 
 
