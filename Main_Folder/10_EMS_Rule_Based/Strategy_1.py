@@ -32,22 +32,11 @@ values
 """
 #%% Read data
 df= load_wholedata()
-#%% Control strategy functions
+df= df[:168]
 
-def PV_only(pv,load,rtp,tou,ps_max,pv_p):    
-    df=pd.DataFrame({'PV':pv,'Load':load,'RTP':rtp,'TOU':tou})
-    df['PV']=df['PV']*pv_p
-    df['Purchased']=np.where(df['PV']>=df['Load'],0,df['Load']-df['PV'])
-    df['Sold'] = np.where(df['PV'] >= df['Load'],np.where((df['PV'] - df['Load']) >= ps_max, ps_max, (df['PV'] - df['Load'])),0)
-    df['Dumped']= np.where(df['PV'] >= df['Load'],np.where((df['PV'] - df['Load']) >= ps_max, df['PV']-df['Load']-ps_max, 0),0)
-    df['Arbitrage']=df['Purchased']-df['Sold']
-    df['TOU_Scenario']=df['Arbitrage']*df['TOU']
-    df['RTP_Scenario']=df['Arbitrage']*df['RTP']
-    TOU_Sum=df['TOU_Scenario'].sum()
-    RTP_Sum=df['RTP_Scenario'].sum()
-    print("TOU total cost: {:.2f}".format(df['TOU_Scenario'].sum()),'\u20AC')
-    print("RTP total cost: {:.2f}".format(df['RTP_Scenario'].sum()),'\u20AC')
-    return TOU_Sum
+#adding pv penetration and calculating mismatch
+df['PV']=7*df['PV']
+df['Mismatch']=df['PV']-df['Load']
 
 #%%
 """
@@ -63,26 +52,49 @@ Pb_max - Maximum available power of the battery---->?
 
 """
 #Battery parameters
-h=1 # because time step is one hour?
-eff_imp=0.9 
-eff_exp=0.8
-pb_max=5
-pb_min=1 #-----??
-soc_max=0.9
-soc_min=0.1
-E_b=100
+
+#battery capacity
+E_b=13.5
+
+#grid limit
 ps_max=3
 
+#because time step is one hour?
+h=1 
 
-# Available input power of the battery
-# shouldn't this be maximum input power of the battery? pb_min?
+#Typical efficiencies/room for improvement
+eff_imp=0.9
+eff_exp=0.8
+
+#Soc limits/ RFI
+soc_max=0.9
+soc_min=0.1
+
+#Battery charging and discharging limits
+#From tesla powerwall 
+pb_max=5
+pb_min=5 
+
+
+# Available input power & output power of the battery
 pb_in_func = lambda pb_max,E_b,soc,soc_max: min(pb_max,(E_b/h)*(soc_max-soc))
-# Available output power of the battery
+
 pb_out_func= lambda pb_max,E_b,soc,soc_min: min(pb_max,(E_b/h)*(soc-soc_min))
 
-def SOC(soc_last,pb_min,pb_max,eff_imp,eff_exp):
-    soc_temp=soc_last + ((pb_min*eff_imp)-(pb_max/eff_exp))/(E_b/h)# double check
+
+#calculate SOC
+def SOC(soc_last,pb_imp,pb_exp):
+    soc_temp=soc_last + (((pb_imp*eff_imp)-(pb_exp/eff_exp))/(E_b/h))# double check
     return soc_temp
+
+#apply everytime charging or discharging the battery
+def SOC_check(soc,pb_imp,pb_exp):
+    soc_next=SOC(soc,pb_imp,pb_exp)
+    if ((soc>=soc_min) ==True) & ((soc<=soc_max)== True):
+        return True
+    else:
+        return False
+    
 
 # Function to compute output with one time step as input not vectorized
 def PV_BES(pv,load,soc,pb_in,pb_out):
@@ -92,56 +104,39 @@ def PV_BES(pv,load,soc,pb_in,pb_out):
     c2= pv-load>=pb_in
     c3= (pv-load-pb_in)>=ps_max
     c4= pb_out>=load-pv
-    
-    #design constraints
-    #dc1= how to find pv_max? - should know the installed capacity first
-      
-    #choices
-    ch1= ps_max
-    ch2= pv-load-pb_in-ps_max
-    ch3= pv-load-pb_in
-    ch4= pv-load
-    ch5= pv+pb_out-load
-    ch6= load-pv
-    
-    #mapping conditions and choices
-    ps=ch3 if (c1==True) & (c2==True) & (c3==False) else None
-    ps=ch1 if (c1==True) & (c2==True) & (c3==True) else None
-    pp=ch5 if (c1==False) & (c4==False) else None
-    pd=ch2 if (c1==True) & (c2==True) & (c3==True) else None
-    p_imp=ch4 if (c1==True) & (c2==False) else None 
-    p_exp=ch6 if (c1==True) & (c4==True) else None
-    
-    return ps,pp,pd,p_imp,p_exp
-
-#%% PV only
-grid_limit=3 # max sent back to grid is 0.077KW
-pv_penetration=6 # change this to increse in 10% steps
-df_pvo=PV_only(df['PV'],df['Load'],df['RTP'],df['TOU'],grid_limit,pv_penetration)
-
-#%% finding optimum values
-
-#setting search iterations
-grid_limit_values=[0.5,1,1.5,2,2.5,3]
-pv_penetration_values=[1,2,3,4,5,6,7,8,9,10]
-
-#itertools returns cartestian pairs of the above values
-input_values=itertools.product(grid_limit_values,pv_penetration_values)
-
-#computes total cost for each pair
-output_values=[PV_only(df['PV'],df['Load'],df['RTP'],df['TOU'],x,y) for x, y in input_values]
-
-#creating a dataframe with iterations and their total value
-inpv=itertools.product(grid_limit_values,pv_penetration_values)
-zipped_values=zip(inpv,output_values)
-df_final=pd.DataFrame(zipped_values,columns=['iter','Total_cost'])
-df_final[['grid_limit', 'pv_penetration']] = df_final['iter'].apply(lambda x: pd.Series(x))
-df_final.drop('iter',axis=1,inplace=True)
-
+        
+    if c1==False: # Deficit flow
+        p_imp=0
+        ps=0
+        pd=0
+        if c4==True:
+            p_exp=load-pv
+            pp=0
+        else:
+            p_exp=pb_out
+            pp=load-pv+p_exp
+            
+    else: # Excess flow (c1==True)
+        p_exp=0
+        pp=0
+        if c2==False:
+            p_imp=pv-load
+            ps=0
+            pd=0
+        else:
+            p_imp=pb_in
+            if c3==False:
+                ps=pv-load-p_imp
+                pd=0
+            else:
+                ps=ps_max
+                pd=pv-load-pb_in-ps_max
+        
+    return pp,p_exp,p_imp,ps,pd
 #%% PV-BES
 
 #intial soc value
-soc=0.2
+soc=0.7
 
 #intializing needed columns to zero to append the values later
 df[['pb_in','pb_out','ps','pp','pd','p_imp','p_exp','soc']]=0
@@ -162,20 +157,22 @@ for index, row in df.iterrows():
     df.at[index, 'pb_out'] = pb_out
     
     #control strategy
-    ps,pp,pd,p_imp,p_exp=PV_BES(pv,load,soc,pb_in,pb_out)
+    #ps,pp,pd,p_imp,p_exp=PV_BES(pv,load,soc,pb_in,pb_out)
+    pp,p_exp,p_imp,ps,pd=PV_BES(pv,load,soc,pb_in,pb_out)
     
     #appending the output from control strategy
-    df.at[index,'ps']=ps
-    df.at[index,'pp']=pp
-    df.at[index,'pd']=pd
-    df.at[index,'p_imp']=p_imp
-    df.at[index,'p_out']=p_exp
-        
-    #update SOC
-    soc=SOC(soc,pb_min,pb_max,eff_imp,eff_exp)
     
+    df.at[index,'pp']=pp
+    df.at[index,'p_exp']=p_exp
+    df.at[index,'p_imp']=p_imp
+    df.at[index,'ps']=ps
+    df.at[index,'pd']=pd
+     
     #appending soc values to the df
     df.at[index,'soc']=soc
+    
+    #update SOC
+    soc=SOC(soc,p_imp,p_exp)
 
 
 
