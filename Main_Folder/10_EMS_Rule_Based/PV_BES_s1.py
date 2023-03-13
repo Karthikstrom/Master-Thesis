@@ -22,6 +22,7 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 from Essential_functions import load_wholedata
+from Cost_analysis import COE
 
 """
  -after making the function could use itertools to loop and find the optimum 
@@ -32,10 +33,10 @@ values
 """
 #%% Read data
 df= load_wholedata()
-df= df[:168]
+df= df[:8760]
 
 #adding pv penetration and calculating mismatch
-df['PV']=7*df['PV']
+#df['PV']=7*df['PV']
 df['Mismatch']=df['PV']-df['Load']
 
 #%%
@@ -77,10 +78,18 @@ pb_min=5
 
 
 # Available input power & output power of the battery
-pb_in_func = lambda pb_max,E_b,soc,soc_max: min(pb_max,(E_b/h)*(soc_max-soc))
 
-pb_out_func= lambda pb_max,E_b,soc,soc_min: min(pb_max,(E_b/h)*(soc-soc_min))
+def pb_in_func(pb_max,E_b,soc,soc_max):
+    pb_in_temp=min(pb_max,(E_b/h)*(soc_max-soc))
+    #to take the charge efficiency into consideration
+    pb_in_temp=eff_imp*pb_in_temp
+    return pb_in_temp
 
+def pb_out_func(pb_max,E_b,soc,soc_min):
+    pb_out_temp=min(pb_max,(E_b/h)*(soc-soc_min))
+    #to take the discharge efficiency into consideration
+    pb_out_temp=eff_exp*pb_out_temp
+    return pb_out_temp
 
 #calculate SOC
 def SOC(soc_last,pb_imp,pb_exp):
@@ -104,6 +113,7 @@ def PV_BES(pv,load,soc,pb_in,pb_out):
     c2= pv-load>=pb_in
     c3= (pv-load-pb_in)>=ps_max
     c4= pb_out>=load-pv
+    
         
     if c1==False: # Deficit flow
         p_imp=0
@@ -114,7 +124,7 @@ def PV_BES(pv,load,soc,pb_in,pb_out):
             pp=0
         else:
             p_exp=pb_out
-            pp=load-pv+p_exp
+            pp=load-pv-p_exp
             
     else: # Excess flow (c1==True)
         p_exp=0
@@ -133,6 +143,7 @@ def PV_BES(pv,load,soc,pb_in,pb_out):
                 pd=pv-load-pb_in-ps_max
         
     return pp,p_exp,p_imp,ps,pd
+
 #%% PV-BES
 
 #intial soc value
@@ -174,5 +185,13 @@ for index, row in df.iterrows():
     #appending soc values to the df
     df.at[index,'soc']=soc
 
+#%% Cost Analysis
+
+zero= [0]*len(df)
 
 
+COS_elec=COE(df['Load'],zero,df['RTP'],zero)
+print("Cost of Electrcity without PV&BES:",COS_elec)
+
+COS_pv_bes=COE(df['pp'],df['ps'],df['RTP'],df['RTP'])
+print("Cost of Electrcity with PV&BES:",COS_pv_bes)

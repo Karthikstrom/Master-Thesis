@@ -30,7 +30,7 @@ sys.path.append(parent)
 from statsmodels.tsa.seasonal import MSTL
 from statsmodels.tsa.seasonal import DecomposeResult
 
-from Essential_functions import load_data2,metrics,data_split
+from Essential_functions import load_data,metrics,data_split
 
 """
 
@@ -60,7 +60,7 @@ it affects how the series should be handled for further analysis.
 
 """
 #%% Read Data|
-df=load_data2()
+df=load_data()
 #%% Seasonal decompose
 result=seasonal_decompose(df['Global_active_power'], model='multiplicable' )
 #%% Adfuller test
@@ -78,7 +78,7 @@ value
 
 
 """
-result = adfuller(df['Global_active_power'])
+result = adfuller(df['Load'])
 print('ADF Statistic: {}'.format(result[0]))
 print('p-value: {}'.format(result[1]))
 print('Critical Values:')

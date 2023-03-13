@@ -74,7 +74,7 @@ periods?
 how to incorporate multiple seasonalities?
 
 """
-decompose_result = seasonal_decompose(df['Load'],model='multiplicative',period=8760)
+decompose_result = seasonal_decompose(df['Load'],model='multiplicative',period=30000)
 df_stl=pd.DataFrame()
 df_stl['residual']=decompose_result.resid
 df_stl['trend']=decompose_result.trend
@@ -101,14 +101,14 @@ Things to explore
 """
 mstl = MSTL(df['Load'], periods=[24, 24 * 7,24 * 365],
             stl_kwargs={
-                "trend":10001, # Setting this large will force the trend to be smoother.
+                "trend":20001, # Setting this large will force the trend to be smoother.
                 "seasonal_deg":0, # Means the seasonal smoother is fit with a moving average.
                })
 res = mstl.fit()
 
 #%% Saving the MSTL Model
 #filename='MSTL1.sav'
-filename='MSTL2.sav'
+filename=r'C:\Users\Karthikeyan\Desktop\Thesis\Model Database\MSTL1.sav'
 pickle.dump(res,open(filename,'wb'))
 
 mst=pickle.load(open('MSTL1.sav','rb'))
