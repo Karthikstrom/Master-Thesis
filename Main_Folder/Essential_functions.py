@@ -41,6 +41,7 @@ def load_data():
     df_hourly['Load']=df['Load'].resample('H').sum()
     df_hourly[df_hourly['Load'].isin([0])]=np.nan
     df_hourly['Load'].interpolate(method='time',inplace=True)
+    df_hourly=df_hourly[:-1]
     return df_hourly
 
 def load_wholedata():

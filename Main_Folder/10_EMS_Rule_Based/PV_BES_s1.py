@@ -23,6 +23,7 @@ sys.path.append(parent)
 
 from Essential_functions import load_wholedata
 from Cost_analysis import COE
+import matplotlib.dates as mdates
 
 """
  -after making the function could use itertools to loop and find the optimum 
@@ -36,7 +37,8 @@ df= load_wholedata()
 df= df[:8760]
 
 #adding pv penetration and calculating mismatch
-#df['PV']=7*df['PV']
+#df['Load']=df['Load']*50
+df['PV']=5*df['PV']
 df['Mismatch']=df['PV']-df['Load']
 
 #%%
@@ -86,7 +88,7 @@ def pb_in_func(pb_max,E_b,soc,soc_max):
     return pb_in_temp
 
 def pb_out_func(pb_max,E_b,soc,soc_min):
-    pb_out_temp=min(pb_max,(E_b/h)*(soc-soc_min))
+    pb_out_temp=min(pb_min,(E_b/h)*(soc-soc_min))
     #to take the discharge efficiency into consideration
     pb_out_temp=eff_exp*pb_out_temp
     return pb_out_temp
@@ -95,14 +97,6 @@ def pb_out_func(pb_max,E_b,soc,soc_min):
 def SOC(soc_last,pb_imp,pb_exp):
     soc_temp=soc_last + (((pb_imp*eff_imp)-(pb_exp/eff_exp))/(E_b/h))# double check
     return soc_temp
-
-#apply everytime charging or discharging the battery
-def SOC_check(soc,pb_imp,pb_exp):
-    soc_next=SOC(soc,pb_imp,pb_exp)
-    if ((soc>=soc_min) ==True) & ((soc<=soc_max)== True):
-        return True
-    else:
-        return False
     
 
 # Function to compute output with one time step as input not vectorized
@@ -188,10 +182,34 @@ for index, row in df.iterrows():
 #%% Cost Analysis
 
 zero= [0]*len(df)
-
-
+df['Arbitrage']=(df['pp']-df['ps'])*df['RTP']
 COS_elec=COE(df['Load'],zero,df['RTP'],zero)
 print("Cost of Electrcity without PV&BES:",COS_elec)
 
 COS_pv_bes=COE(df['pp'],df['ps'],df['RTP'],df['RTP'])
 print("Cost of Electrcity with PV&BES:",COS_pv_bes)
+
+#%% Plotting
+
+# fig,ax=plt.subplots()
+# ax.plot(df_daily['diff'].rolling(24).mean())
+# plt.title("Rolling mean of Daily price difference")
+# plt.ylabel("Price difference(Euro/Kwh)")
+# #plt.savefig("price_diff_s2.jpeg",dpi=500)
+# plt.plot()
+
+# fig,bx=plt.subplots()
+# bx.plot(df['soc'].iloc[1500:1720])
+# bx.xaxis.set_major_formatter(mdates.DateFormatter('%b\n%d'))
+# plt.title("State of charge of the battery- Strategy 1")
+# plt.ylabel("SOC")
+# plt.savefig("soc_s1_zoomed.jpeg",dpi=500)
+# plt.plot()
+
+fig,cx=plt.subplots()
+cx.plot(df['pp'])
+cx.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+plt.title("Power purchased- Strategy 1")
+plt.ylabel("Power (KW)")
+plt.savefig("pp_s1.jpeg",dpi=500)
+plt.plot()

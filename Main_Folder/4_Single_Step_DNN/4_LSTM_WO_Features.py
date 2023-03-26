@@ -69,8 +69,8 @@ print("Target shape:", train_y.shape)
 #%%LSTM model
 lstm_model=Sequential()
 lstm_model.add(LSTM(120, activation='relu', input_shape=(train_x.shape[1], train_x.shape[2])))
-lstm_model.add(Dense(6))
-lstm_model.add(Dense(op_steps))
+lstm_model.add(Dense(6,activation='relu'))
+lstm_model.add(Dense(op_steps,activation='linear'))
 lstm_model.compile(loss='mse', optimizer='adam')
 lstm_model.summary()
 

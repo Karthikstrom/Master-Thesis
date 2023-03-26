@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Fri Mar 24 23:59:31 2023
+
+@author: Karthikeyan
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu Feb  2 21:07:30 2023
 
 @author: Karthikeyan
@@ -28,8 +35,9 @@ from sklearn.metrics import mean_absolute_percentage_error
 
 from sklearn.preprocessing import StandardScaler
 from keras.models import Sequential, Model
-from keras.layers import Dense, LSTM, RepeatVector, TimeDistributed, Flatten,Conv1D,MaxPooling1D
+from keras.layers import Dense, LSTM, RepeatVector, TimeDistributed, Flatten,Conv1D,MaxPooling1D,Dropout
 import pickle
+from keras.optimizers import Adam
 
 from bayes_opt import BayesianOptimization
 #%% Read data
@@ -57,7 +65,7 @@ def split_sequence_multi(data,look_back,future_steps):
         y.append(y_temp)
     return np.asarray(X),np.asarray(y)
 
-def grid_search_1D(train,test,val,no_of_neurons,no_of_epochs):
+def grid_search_1D(train,test,val,no_of_neurons,no_of_epochs,lookback_len,no_of_batches,learning_rate,dropout_ratio):
     
     scaler=StandardScaler()
     scaler=scaler.fit(train)
@@ -66,7 +74,7 @@ def grid_search_1D(train,test,val,no_of_neurons,no_of_epochs):
     test=scaler.transform(test)
     val=scaler.transform(val)
     
-    ip_steps=24
+    ip_steps=lookback_len
     op_steps=1
     train_x,train_y=split_sequence_multi(train,ip_steps,op_steps)
     val_x,val_y=split_sequence_multi(val,ip_steps,op_steps)
@@ -80,13 +88,16 @@ def grid_search_1D(train,test,val,no_of_neurons,no_of_epochs):
     val_y=val_y.flatten()
     test_y=test_y.flatten()
     
+    optimizer = Adam(lr=learning_rate)
+    
     model_mlp = Sequential()
     model_mlp.add(Dense(no_of_neurons,activation='relu',input_dim=train_x.shape[1]))
+    model_mlp.add(Dropout(dropout_ratio))
     model_mlp.add(Dense(op_steps))
-    model_mlp.compile(loss='mse', optimizer='adam')
+    model_mlp.compile(loss='mse', optimizer=optimizer)
     model_mlp.summary()
 
-    mlp_history = model_mlp.fit(train_x, train_y, validation_data=(val_x,val_y), epochs=no_of_epochs, verbose=2)
+    mlp_history = model_mlp.fit(train_x, train_y, validation_data=(val_x,val_y),batches=no_of_batches, epochs=int(no_of_epochs), verbose=2)
     
     mlp_predict= model_mlp.predict(test_x)
 
@@ -182,7 +193,6 @@ epochs=[20,70,140,280]
 lookback_steps=[168,48,24,12,6]
 dropout_ratio=[0,0.1,0.2]
 learning_rate=[0.0001,0.001,0.01,0.1]
-activation_func=['tanh','sigmoid','ReLU']
 batchs=[8, 16, 32, 64, 128, 256]
 
 
@@ -199,15 +209,39 @@ df_final=pd.DataFrame(zipped_values,columns=['iter','RMSE'])
 
 #%% Bayesian Optimization
 
-parameter_range={'no_of_neurons':(2,4,8,16,32,64,128),'no_of_epochs': (20,70,140,280)}
+parameter_range={
+                 'no_of_neurons': (2,4,8,16,32,64,128),
+                 'no_of_epochs':  (20,70,140,280),
+                 'lookback_len':  (168,48,24,12,60),
+                 'no_of_batches': (8, 16, 32, 64, 128, 256),
+                 'learning_rate': (0.0001,0.001,0.01,0.1),
+                 'dropout_ratio': (0,0.1,0.2)
+                 }
 
 
-optimizer = BayesianOptimization(f=lambda no_of_neurons,no_of_epochs: grid_search_1D(train,test,val,no_of_neurons,no_of_epochs), pbounds=parameter_range, random_state=1)
-optimizer.maximize(n_iter=10)
-print(optimizer.max)
+boptimizer = BayesianOptimization(f= lambda no_of_neurons,no_of_epochs,lookback_len,no_of_batches,learning_rate,dropout_ratio: grid_search_1D(train,test,val,no_of_neurons,no_of_epochs,lookback_len,no_of_batches,learning_rate,dropout_ratio), pbounds=parameter_range,random_state=1)
+boptimizer.maximize(init_points=5,
+    n_iter=10)
+print(boptimizer.max)
 
+#%%
+def f(x,y):
+    
+    
+    return x**3+y
+# Bounded region of parameter space
+pbounds = {'x': (2, 4), 'y': (-3, 3)}
 
+optimizer = BayesianOptimization(
+    f=f,
+    pbounds=pbounds,
+    random_state=1,
+)
 
+optimizer.maximize(
+    init_points=2,
+    n_iter=3,
+)
 
 
 

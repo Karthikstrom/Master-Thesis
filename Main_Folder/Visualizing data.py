@@ -12,8 +12,12 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from Essential_functions import load_data2,load_data
 import matplotlib.dates as mdates
+import seaborn as sns
+sns.set_theme()
+# sns.set_context('notebook')
+# sns.set_style("whitegrid")
 #%% Importing data
-df=load_data2()
+df=load_data()
 #%% Clipping the data from first non-zero value to the last
 #df=df.loc['2016-01-01':'2016-12-31']
 df.dropna(inplace=True)
@@ -26,14 +30,14 @@ df['grid_import']=df['grid_import'].diff()
 #%% Removing Nan values
 df.dropna(inplace=True)
 #%% Plotting the whole data
-fig,a1=plt.subplots()
-a1.plot(df[:168])
+fig,a1=plt.subplots(figsize=(10,5))
+a1.plot(df.loc['22-08-2009':'28-08-2009'])
 
-a1.xaxis.set_major_formatter(mdates.DateFormatter('%b\n%d'))
-plt.title("Clean data sample for a week")
-plt.ylabel("Load consumption (KW)")
+a1.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
+#plt.title("Clean data sample for a week")
+plt.ylabel("Load (KW)")
 #plt.tight_layout()
-plt.savefig("Clean_data_sample.jpeg",format="jpeg",dpi=500)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\Week_data2.jpeg",format="jpeg",dpi=500)
 plt.show()
 
 #%% Plotting weekly average
@@ -135,4 +139,11 @@ plt.ylabel("Mean Absolute Percentage Error (%)")
 plt.tight_layout()
 plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\MAPE_comparison.jpeg",dpi=500)
 # Show graphic
+plt.show()
+
+#%% Density plot of the data
+#sns.histplot(data=df['Load'],kde=True)
+sns.distplot(df['Load'])
+plt.xlabel('Load (W)')
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\distt_plot.jpeg",format="jpeg",dpi=500)
 plt.show()

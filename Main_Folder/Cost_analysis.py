@@ -90,4 +90,9 @@ def COE(pp,ps,rtp,fit):
     
     Cost_of_elec=((component_npc*crf_s)+(elec_npc*crf_e))/E_annual
     
+    print("Battery Cost details")
+    print("No of batteries:",bat_num)
+    
+    
+    
     return Cost_of_elec
