@@ -37,22 +37,27 @@ from sklearn.metrics import r2_score, median_absolute_error, mean_absolute_perce
 from sklearn.metrics import median_absolute_error, mean_squared_error, mean_squared_log_error
 
 
-from Essential_functions import load_data,metrics,load_data2
+from Essential_functions import load_data,metrics,load_data2,real_load
 sns.set_theme()
 #%% Read Data
-df=load_data2()
+df=real_load()
 df['Load']=df['Load'].astype(np.float32)
 df=df[-8760:]
+df1=df.copy()
 
-df['Global_active_power']=df['Global_active_power'].astype(np.float32)
-df=df[-8760:]
+#%% Exp
 
-#Analyse and determine parameter values
-seasonal_diff=df['Global_active_power'].diff(168)
+#Diff
+df['Diff1']=df['Load'].diff(1)
+df['Rev_Diff1']=df['Diff1']+df['Load'].shift(1)
+
+
+#%%Analyse and determine parameter values
+seasonal_diff=df['Load'].diff(1)
 seasonal_diff.dropna(inplace=True)
 seasonal_diff2=seasonal_diff.diff(24)
 seasonal_diff2.dropna(inplace=True)
-seasonal_diff3=seasonal_diff2.diff(1)
+seasonal_diff3=seasonal_diff2.diff(168)
 seasonal_diff3.dropna(inplace=True)
 #%% Train Test split
 train=df[:-720*3]
@@ -210,31 +215,36 @@ D=1 (for one differentiation its okay)
 # add the grid search part
 #%% Model Training
 
-p=6
+p=2
 d=1
-q=3
+q=1
 P=3
-D=1
-Q=1
+D=0
+Q=2
 s=24
 
 best_model=sm.tsa.statespace.SARIMAX(train['Load'], order=(p, d, q), 
                                         seasonal_order=(P, D, Q, s)).fit(disp=-1)
 
-#%% Predict 
+d=1,#%% Predict 
 forecast = best_model.predict(start = len(train), end = len(train)+len(test)-1)
 
+#%% Save Model
+filename=r'C:\Users\Karthikeyan\Desktop\Thesis\Model Database\SARIMA.sav'
+pickle.dump(best_model,open(filename,'wb'))
 #%% Plotting
 
-test['predicted']=forecast
+test.loc[:,'predicted']=forecast
 
 fig,ax=plt.subplots(figsize=(10,5))
 ax.plot(test['Load'],label="Actual",color='b')
 ax.plot(test['predicted'],label="Predicted",color='r')
-ax.set_ylabel("Load(W)")
+ax.set_ylabel("Load (kW)")
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
 #plt.title("SARIMA")
-plt.xlim(datetime.datetime(2022, 11, 7), datetime.datetime(2022, 11, 14))
+
+plt.xlim(datetime.datetime(2019, 6, 3), datetime.datetime(2019, 6, 10))
 plt.legend()
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\SARIMA1.jpeg",format="jpeg",dpi=500)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\SARIMA1.jpeg",format="jpeg",dpi=500)
 plt.show()
+

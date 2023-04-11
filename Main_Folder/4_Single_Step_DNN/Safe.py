@@ -39,6 +39,7 @@ from keras.layers import Dense, LSTM, RepeatVector, TimeDistributed, Flatten,Con
 import pickle
 from keras.optimizers import Adam
 
+
 from bayes_opt import BayesianOptimization
 #%% Read data
 df=load_data()
@@ -209,6 +210,9 @@ df_final=pd.DataFrame(zipped_values,columns=['iter','RMSE'])
 
 #%% Bayesian Optimization
 
+
+
+
 parameter_range={
                  'no_of_neurons': (2,4,8,16,32,64,128),
                  'no_of_epochs':  (20,70,140,280),
@@ -224,42 +228,3 @@ boptimizer.maximize(init_points=5,
     n_iter=10)
 print(boptimizer.max)
 
-#%%
-def f(x,y):
-    
-    
-    return x**3+y
-# Bounded region of parameter space
-pbounds = {'x': (2, 4), 'y': (-3, 3)}
-
-optimizer = BayesianOptimization(
-    f=f,
-    pbounds=pbounds,
-    random_state=1,
-)
-
-optimizer.maximize(
-    init_points=2,
-    n_iter=3,
-)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-First grid search-128N,70Epoch epic
-"""

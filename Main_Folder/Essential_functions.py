@@ -152,3 +152,11 @@ def normalization(data):
 def iterative_prediction(model,test_data,window,future_steps):
     prediction_op=[]
     return 1
+
+def real_load():
+    df_hourly=pd.DataFrame()
+    df = pd.read_hdf(r'C:\Users\Karthikeyan\Desktop\Thesis\data\dfE_300s.hdf')
+    df_hourly['Load']=df['E_total_cons_power'].resample('H').mean()
+    df_hourly.interpolate(method='linear',inplace=True)
+    df_hourly['Load']=df_hourly['Load']/1000
+    return df_hourly

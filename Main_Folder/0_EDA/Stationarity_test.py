@@ -30,7 +30,7 @@ sys.path.append(parent)
 from statsmodels.tsa.seasonal import MSTL
 from statsmodels.tsa.seasonal import DecomposeResult
 
-from Essential_functions import load_data,metrics,data_split
+from Essential_functions import real_load,metrics,data_split
 
 """
 
@@ -60,7 +60,9 @@ it affects how the series should be handled for further analysis.
 
 """
 #%% Read Data|
-df=load_data()
+df=real_load()
+df['Diff1']=df['Load'].diff(1)
+df.dropna(inplace=True)
 #%% Seasonal decompose
 result=seasonal_decompose(df['Global_active_power'], model='multiplicable' )
 #%% Adfuller test
@@ -88,6 +90,15 @@ for key, value in result[4].items():
 # reject null hyp as p value lower than 0.05
 # cannot reject null hyp as abs(t-value) > Critical value
 
+# Set machine epsilon value
+eps = np.finfo(float).eps
+
+# Check if p-value is effectively zero
+if result[1] < eps:
+    print("p-value is effectively zero")#ovwhelming evidence to reject the null hypothesis
+else:
+    print("p-value is not effectively zero")    
+
 #%% KPSS test
 
 """
@@ -95,9 +106,10 @@ Null Hypothesis: It is stationary
 Alternate Hypothesis: It is not stationary
 
 """
-kpss_test = kpss(df['Global_active_power'])
+kpss_test = kpss(df['Diff1'])
 
 print('KPSS Statistic: %f' % kpss_test[0])
 print('Critical Values @ 0.05: %.2f' % kpss_test[3]['5%'])
 print('p-value: %f' % kpss_test[1])
+
 

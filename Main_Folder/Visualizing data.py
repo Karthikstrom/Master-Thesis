@@ -10,14 +10,16 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
-from Essential_functions import load_data2,load_data
+from Essential_functions import load_data2,load_data,real_load
 import matplotlib.dates as mdates
 import seaborn as sns
 sns.set_theme()
 # sns.set_context('notebook')
 # sns.set_style("whitegrid")
 #%% Importing data
-df=load_data()
+df=real_load()
+df['day']=df.index.dayofweek
+df['h']=df.index.hour
 #%% Clipping the data from first non-zero value to the last
 #df=df.loc['2016-01-01':'2016-12-31']
 df.dropna(inplace=True)
@@ -40,6 +42,23 @@ plt.ylabel("Load (KW)")
 #plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\Week_data2.jpeg",format="jpeg",dpi=500)
 plt.show()
 
+#%% Weekly average
+
+
+std=df.groupby(['day','h'],as_index=False).std()
+weekly_avg=df.groupby(['day','h'],as_index=False).mean()
+
+x_lables=['Mon','Tue','Wed','Thur','Fri','Sat','Sun']
+x_pos=[i for i in range(12,len(weekly_avg),24)]
+
+fig,ax=plt.subplots(figsize=(10,5))
+ax=sns.lineplot(x=weekly_avg.index, y=weekly_avg['Load'])
+plt.fill_between(weekly_avg.index, weekly_avg['Load'] +std['Load'], weekly_avg['Load'] -std['Load'], alpha=0.3)
+ax.set_xlabel("Time")
+ax.set_ylabel("Load (kW)")
+plt.xticks(x_pos, x_lables)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\Week_data3.jpeg",format="jpeg",dpi=500)
+plt.show()
 #%% Plotting weekly average
 fig,bx=plt.subplots()
 bx.plot(df['grid_import'].resample('W').sum())
@@ -57,6 +76,40 @@ df['grid_import'].groupby(df.index.strftime('%Y')).sum()
 #%% Rolling mean plots
 fig,ex=plt.subplots()
 ex.plot(df['grid_import'].rolling(4*24*7).mean())
+plt.show()
+
+#%%
+
+base   =  [0.251, 0.410]
+sarima =  [0.231, 0.322]
+mlp    =  [0.195, 0.281]
+cnn    =  [0.179, 0.275]
+rnn    =  [0.183, 0.277]
+lstm   =  [0.175,0.270]
+bilstm =  [0.173,0.269]
+cnnlstm=  [0.181,0.271]
+
+x = np.arange(len(sarima))
+width = 0.1
+  
+plt.figure(figsize=(9, 10.5))
+
+# plot data in grouped manner of bar type
+
+plt.bar(x-3*width, base, width, color='royalblue')
+plt.bar(x-2*width, sarima, width, color='slateblue')
+plt.bar(x-width, mlp, width, color='teal')
+plt.bar(x, cnn, width, color='mediumseagreen')
+plt.bar(x+width, rnn, width, color='darkkhaki')
+plt.bar(x+2*width, lstm, width, color='sandybrown')
+plt.bar(x+3*width, bilstm, width, color='orchid')
+plt.bar(x+4*width, cnnlstm, width, color='indianred')
+
+plt.xticks(x, ['RMSE', 'MAE'])
+plt.xlabel("ERROR METRICS")
+plt.ylabel("Scores (kW)")
+plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"])
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\bar_comp.jpeg",format="jpeg",dpi=500)
 plt.show()
 #%% Comparing performance
 
@@ -142,8 +195,9 @@ plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\MAPE
 plt.show()
 
 #%% Density plot of the data
-#sns.histplot(data=df['Load'],kde=True)
-sns.distplot(df['Load'])
-plt.xlabel('Load (W)')
-#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\distt_plot.jpeg",format="jpeg",dpi=500)
+fig,a2=plt.subplots(figsize=(10,5))
+a2=sns.distplot(df['Load'])
+a2.set_xlabel('Load (kW)')
+plt.xlim(0,2.5)
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\kde_plot.jpeg",format="jpeg",dpi=500)
 plt.show()
