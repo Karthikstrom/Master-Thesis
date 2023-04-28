@@ -30,18 +30,37 @@ from Battery_Functions import pb_in_func,pb_out_func,SOC
 #%% Read data
 
 df= load_wholedata()
-df= df[:8760]
+df=df[df.index.year==2019]
 
-#adding pv penetration and calculating mismatch
-#df['PV']=7*df['PV']
-df['Mismatch']=df['PV']-df['Load']
+
+#adding pv penetration 
+df['PV']=7*df['PV']
 #%% Battery specifications
-E_b=13.5
+
+#battery capacity
+E_b=6.6
+
+#grid limit
+ps_max=3.2
+
+#because time step is one hour?
+h=1 
+
+#Typical efficiencies/room for improvement
+eff_imp=1
+eff_exp=1
+
+#Soc limits/ RFI
 soc_max=0.9
 soc_min=0.1
-pb_max=5
-pb_min=5
+
+#Battery charging and discharging limits
+#From tesla powerwall 
+pb_max=2.8
+pb_min=2.8
 #%% Initianlizing control variables/Arbitary values
+
+
 X1=0.299 #mean of differences from each day/ could be dymanic- each month
 X2=10/100 #percentage of charging when price is the lowest
 X3=10/100 #percentage of dischargin when price is the highest

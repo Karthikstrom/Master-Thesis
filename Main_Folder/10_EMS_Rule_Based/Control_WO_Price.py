@@ -17,6 +17,8 @@ import seaborn as sns
 import tensorflow as tf
 import itertools
 
+from KPIs import EMS_KPI
+
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -32,14 +34,15 @@ values
  - use select when each condition has only one output/ create multiple selects
   (np.select)
 """
+
 #%% Read data
 df= load_wholedata()
-df= df[:8760]
+df=df[df.index.year==2019]
 
 #adding pv penetration and calculating mismatch
 #df['Load']=df['Load']*50
-df['PV']=5*df['PV']
-df['Mismatch']=df['PV']-df['Load']
+df['PV']=7*df['PV']
+#df['Mismatch']=df['PV']-df['Load']
 
 #%%
 """
@@ -57,17 +60,17 @@ Pb_max - Maximum available power of the battery---->?
 #Battery parameters
 
 #battery capacity
-E_b=13.5
+E_b=6.6
 
 #grid limit
-ps_max=3
+ps_max=3.2
 
 #because time step is one hour?
 h=1 
 
 #Typical efficiencies/room for improvement
 eff_imp=0.9
-eff_exp=0.8
+eff_exp=0.9
 
 #Soc limits/ RFI
 soc_max=0.9
@@ -75,8 +78,8 @@ soc_min=0.1
 
 #Battery charging and discharging limits
 #From tesla powerwall 
-pb_max=5
-pb_min=5 
+pb_max=2.8
+pb_min=2.8
 
 
 # Available input power & output power of the battery
@@ -100,43 +103,58 @@ def SOC(soc_last,pb_imp,pb_exp):
     
 
 # Function to compute output with one time step as input not vectorized
-def PV_BES(pv,load,soc,pb_in,pb_out):
+def PV_BES1(pv,load,soc,pb_in,pb_out):
     
-    #conditions
-    c1= pv>=load
-    c2= pv-load>=pb_in
-    c3= (pv-load-pb_in)>=ps_max
-    c4= pb_out>=load-pv
     
-        
-    if c1==False: # Deficit flow
-        p_imp=0
-        ps=0
-        pd=0
-        if c4==True:
-            p_exp=load-pv
+    #Excess flow
+    if pv>=load: 
+        #Check battery capacity
+        if pb_in>pv-load:
             pp=0
-        else:
-            p_exp=pb_out
-            pp=load-pv-p_exp
-            
-    else: # Excess flow (c1==True)
-        p_exp=0
-        pp=0
-        if c2==False:
+            p_exp=0
             p_imp=pv-load
             ps=0
             pd=0
-        else:
-            p_imp=pb_in
-            if c3==False:
-                ps=pv-load-p_imp
-                pd=0
-            else:
-                ps=ps_max
-                pd=pv-load-pb_in-ps_max
         
+        else:
+            #Check for grid limit
+            
+            #if exceeds the limit
+            if pv-load-pb_in>ps_max:
+                p_imp=pb_in
+                p_exp=0
+                ps=ps_max
+                pp=0
+                pd=pv-load-pb_in
+                
+            # under grid limit    
+            else:
+                p_imp=pb_in
+                p_exp=0
+                ps=pv-load-p_imp
+                pp=0
+                pd=0
+    
+    #Deficit floe
+    else:
+        
+        #Check battery capacity
+        if pb_out>load-pv:
+            p_exp=load-pv
+            p_imp=0
+            ps=0
+            pp=0
+            pd=0
+            
+        else:
+            p_exp=pb_out
+            p_imp=0
+            pp=load-pv-p_exp
+            ps=0
+            pd=0
+            
     return pp,p_exp,p_imp,ps,pd
+    
 
 #%% PV-BES
 
@@ -144,11 +162,10 @@ def PV_BES(pv,load,soc,pb_in,pb_out):
 soc=0.7
 
 #intializing needed columns to zero to append the values later
-df[['pb_in','pb_out','ps','pp','pd','p_imp','p_exp','soc']]=0
+df[['pb_in','pb_out','ps','pp','pd','p_imp','p_exp','soc']]=0.0000
 
 #iterrows iterates through each row separately
 for index, row in df.iterrows():
-    
     #isolating values from each row
     pv=row['PV']
     load=row['Load']
@@ -162,7 +179,7 @@ for index, row in df.iterrows():
     df.at[index, 'pb_out'] = pb_out
     
     #control strategy
-    pp,p_exp,p_imp,ps,pd=PV_BES(pv,load,soc,pb_in,pb_out)
+    pp,p_exp,p_imp,ps,pd=PV_BES1(pv,load,soc,pb_in,pb_out)
     
     #appending the output from control strategy
     
@@ -171,8 +188,8 @@ for index, row in df.iterrows():
     df.at[index,'p_imp']=p_imp
     df.at[index,'ps']=ps
     df.at[index,'pd']=pd
-     
     
+     
     #update SOC
     soc=SOC(soc,p_imp,p_exp)
 
@@ -180,36 +197,29 @@ for index, row in df.iterrows():
     df.at[index,'soc']=soc
 
 #%% Cost Analysis
-
-zero= [0]*len(df)
-df['Arbitrage']=(df['pp']-df['ps'])*df['RTP']
-COS_elec=COE(df['Load'],zero,df['RTP'],zero)
-print("Cost of Electrcity without PV&BES:",COS_elec)
-
-COS_pv_bes=COE(df['pp'],df['ps'],df['RTP'],df['RTP'])
-print("Cost of Electrcity with PV&BES:",COS_pv_bes)
-
+EMS_KPI(df['pp'],df['ps'],df['TOU'])
 #%% Plotting
 
 # fig,ax=plt.subplots()
-# ax.plot(df_daily['diff'].rolling(24).mean())
-# plt.title("Rolling mean of Daily price difference")
-# plt.ylabel("Price difference(Euro/Kwh)")
-# #plt.savefig("price_diff_s2.jpeg",dpi=500)
-# plt.plot()
+# # ax.plot(df_daily['diff'].rolling(24).mean())
+# # plt.title("Rolling mean of Daily price difference")
+# # plt.ylabel("Price difference(Euro/Kwh)")
+# # #plt.savefig("price_diff_s2.jpeg",dpi=500)
+# # plt.plot()
 
 # fig,bx=plt.subplots()
 # bx.plot(df['soc'].iloc[1500:1720])
 # bx.xaxis.set_major_formatter(mdates.DateFormatter('%b\n%d'))
 # plt.title("State of charge of the battery- Strategy 1")
 # plt.ylabel("SOC")
-# plt.savefig("soc_s1_zoomed.jpeg",dpi=500)
+# #plt.savefig("soc_s1_zoomed.jpeg",dpi=500)
 # plt.plot()
 
-fig,cx=plt.subplots()
-cx.plot(df['pp'])
-cx.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-plt.title("Power purchased- Strategy 1")
-plt.ylabel("Power (KW)")
-plt.savefig("pp_s1.jpeg",dpi=500)
-plt.plot()
+# fig,cx=plt.subplots()
+# cx.plot(df['pp'])
+# cx.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+# plt.title("Power purchased- Strategy 1")
+# plt.ylabel("Power (KW)")
+# #plt.savefig("pp_s1.jpeg",dpi=500)
+# plt.plot()
+

@@ -155,8 +155,10 @@ def iterative_prediction(model,test_data,window,future_steps):
 
 def real_load():
     df_hourly=pd.DataFrame()
-    df = pd.read_hdf(r'C:\Users\Karthikeyan\Desktop\Thesis\data\dfE_300s.hdf')
-    df_hourly['Load']=df['E_total_cons_power'].resample('H').mean()
+    df = pd.read_hdf(r'C:\Users\Karthikeyan\Desktop\Thesis\data\dfC_300s.hdf')
+    df_hourly['Load']=df['C_total_cons_power'].resample('H').mean()
+    df_hourly['PV']=df['C_pv_prod_power']
     df_hourly.interpolate(method='linear',inplace=True)
     df_hourly['Load']=df_hourly['Load']/1000
+    df_hourly['PV']=df_hourly['PV']/1000
     return df_hourly
