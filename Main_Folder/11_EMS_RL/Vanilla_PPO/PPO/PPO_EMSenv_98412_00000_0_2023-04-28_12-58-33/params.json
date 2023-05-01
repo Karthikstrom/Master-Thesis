@@ -1,0 +1,5 @@
+{
+  "env": "<class 'Env_custom.EMSenv'>",
+  "evaluation_interval": 100,
+  "evaluation_num_episodes": 1000
+}

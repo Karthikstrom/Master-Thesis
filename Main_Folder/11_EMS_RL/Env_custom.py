@@ -17,10 +17,10 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from Essential_functions import load_wholedata
+# from Essential_functions import load_wholedata
 
-df=load_wholedata()
-df=df[df.index.year==2019]
+# df=load_wholedata()
+# df=df[df.index.year==2019]
 #%% Loading packages
 import gym
 from gym import spaces
@@ -48,9 +48,12 @@ class EMSenv(gym.Env):
         
         self.max_discharging=-2.8
         self.max_charging=2.8
-        self.action_space=spaces.Box(low=np.array([self.max_discharging]),high=np.array([self.max_charging]))
+        #self.action_space=spaces.Box(low=np.array([self.max_discharging]),high=np.array([self.max_charging]))
         
-        
+        #Discretized Action space 
+        self.n_actions = 100
+        self.discretized_actions = np.linspace(self.max_discharging, self.max_charging,self.n_actions)
+        self.action_space = gym.spaces.Discrete(self.n_actions)
         # Define observation space: bounds,space type, shape
         # Bounds : 
         # Space Types :
@@ -114,7 +117,7 @@ class EMSenv(gym.Env):
         """
         
         #Generating a random number to get a random day in the training year
-        self.random_day=random.randint(1, 365)
+        self.random_day=random.randint(2, 364)
         
         #Index from 23.00 from the previous day to the end of next day
         #So that decisions are taken from 00:00 and not 01.00
@@ -128,8 +131,7 @@ class EMSenv(gym.Env):
         self.price=self.df['RTP'][self.start_idx:self.end_idx]
         
         #Initializing random battery capacity
-        battery_cap=self.rng.uniform()*self.max_battery_cap
-                
+        battery_cap = round(self.rng.uniform(self.min_battery_cap, self.max_battery_cap), 2)
         #Reset should pass the initial observation
         self.current_obs=np.array([self.load[0],self.price[0],self.pv[0],battery_cap])
         
@@ -146,14 +148,18 @@ class EMSenv(gym.Env):
         """
 
         # Action looks like np.array([20.0]). We need to convert that to float 20.0 for easier calculation
-        battery_action=action[0]
+        #battery_action=action[0]
+        battery_action=action
+        
+        #Next time step
+        self.hour_num=self.hour_num+1
         
         #Compute Next observation
         #Take time step as input
         # Not sure how it takes decision in the first time step
-        next_load=self.load[self.hour_num+1]
-        next_pv=self.pv[self.hour_num+1]
-        next_price=self.price[self.hour_num+1]
+        next_load=self.load[self.hour_num]
+        next_pv=self.pv[self.hour_num]
+        next_price=self.price[self.hour_num]
         
         #For the battery capacity, how do i get the previous battery cap?
         #Not sure if this is right but should find a way to use the
@@ -171,8 +177,7 @@ class EMSenv(gym.Env):
         #Simple reward
         reward=-(next_price*grid_t)
         
-        # Compute done
-        self.hour_num=self.hour_num+1
+        
         
         
         done=False
@@ -217,13 +222,13 @@ class EMSenv(gym.Env):
 
  #%% Testing the environment
 
-test_env=EMSenv(df)
+# test_env=EMSenv(df)
 
-for i in range(5):
-    obs=test_env.reset()
-    done=False
-    while done==False:
-        action=np.array([0])
-        obs,r,done,_=test_env.step(action)
-        print(test_env.random_day)
+# for i in range(10000):
+#     obs=test_env.reset()
+#     done=False
+#     while done==False:
+#         action=np.array([0])
+#         obs,r,done,_=test_env.step(action)
+#         print(test_env.random_day)
          

@@ -155,10 +155,30 @@ def iterative_prediction(model,test_data,window,future_steps):
 
 def real_load():
     df_hourly=pd.DataFrame()
-    df = pd.read_hdf(r'C:\Users\Karthikeyan\Desktop\Thesis\data\dfC_300s.hdf')
-    df_hourly['Load']=df['C_total_cons_power'].resample('H').mean()
-    df_hourly['PV']=df['C_pv_prod_power']
+    df = pd.read_hdf(r'C:\Users\Karthikeyan\Desktop\Thesis\data\dfE_300s.hdf')
+    df1 = pd.read_hdf(r'C:\Users\Karthikeyan\Desktop\Thesis\data\dfE_3600s.hdf')
+    
+    #Load freatures
+    df_hourly['Load']=df['E_total_cons_power'].resample('H').mean()
+    df_hourly['PV']=df['E_prod_power'].resample('H').mean()
+    df_hourly['Diswasher']=df['E_dishwasher_power'].resample('H').mean()
+    df_hourly['Dryer']=df['E_tumble_dryer_power'].resample('H').mean()
+    df_hourly['Heat_pump']=df['E_gasheating_pump_power'].resample('H').mean()
+    df_hourly['Water_heater']=df['E_solarheating_pump_power'].resample('H').mean()
+    df_hourly['Washing_machine']=df['E_washing_machine_power'].resample('H').mean()
+    df_hourly['Dehumidifier']=df['E_dehumidifier_power'].resample('H').mean()
     df_hourly.interpolate(method='linear',inplace=True)
-    df_hourly['Load']=df_hourly['Load']/1000
-    df_hourly['PV']=df_hourly['PV']/1000
+    df_hourly=df_hourly.div(1000)
+    
+    #Weather features
+    df_hourly['Temp_in']=df1['E_weather_temperature_in']
+    df_hourly['Temp_out']=df1['E_weather_temperature_out']
+    df_hourly['Pressure_out']=df1['E_weather_pressure']
+    df_hourly['Humidity_in']=df1['E_weather_humidity_in']
+    df_hourly['Humidity_out']=df1['E_weather_humidity_out']
+    
     return df_hourly
+
+def corr_heat_map(df):
+    corr_mat=df.corr()
+    sns.heatmap(corr_mat, cmap='coolwarm')
