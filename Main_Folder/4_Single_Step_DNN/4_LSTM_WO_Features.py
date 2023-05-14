@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import tensorflow as tf
+#import tensorflow as tf
 sns.set_theme()
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -23,6 +23,7 @@ sys.path.append(parent)
 
 from Essential_functions import load_data2,metrics,data_split,real_load
 from keras.optimizers import Adam
+import tensorflow.keras.backend as K
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 from keras.models import Sequential, Model
@@ -51,6 +52,9 @@ def split_sequence_multi(data,look_back,future_steps):
         X.append(x_temp)
         y.append(y_temp)
     return np.asarray(X),np.asarray(y)
+
+def root_mean_squared_error(y_true, y_pred):
+        return K.sqrt(K.mean(K.square(y_pred - y_true)))
 
 def LSTM_model(train=train,test=test,val=val,no_of_neurons=10,lookback_val=24,learning_rate=0.001,no_of_epochs=30,dropout_ratio=0,no_of_batches=32):
     
@@ -156,7 +160,7 @@ lstm_model=Sequential()
 lstm_model.add(LSTM(30, activation='relu', input_shape=(train_x.shape[1], train_x.shape[2])))
 lstm_model.add(Dropout(0.089))
 lstm_model.add(Dense(op_steps))
-lstm_model.compile(loss='mse', optimizer='adam')
+lstm_model.compile(loss=root_mean_squared_error, optimizer='adam')
 lstm_model.summary()
 
 lstm_history =lstm_model.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=50, verbose=2)

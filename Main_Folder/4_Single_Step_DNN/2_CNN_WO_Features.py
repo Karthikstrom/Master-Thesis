@@ -26,12 +26,15 @@ from Essential_functions import real_load,metrics,data_split
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from keras.models import Sequential, Model
-from bayes_opt import BayesianOptimization
+#from bayes_opt import BayesianOptimization
 from keras.layers import Dense, LSTM, RepeatVector, TimeDistributed, Flatten,Conv1D,MaxPooling1D
-sns.set_theme()
+custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+csfont = {'fontname':'Times New Roman'}
+sns.set_theme(style="ticks", rc=custom_params)
 import pickle
 #%% Read data
 df=real_load()
+df=df[['Load']]
 #%% Splitting the data (70%,20%,10%)
 n=len(df)
 train=df[:int(n*0.7)]
@@ -178,16 +181,17 @@ df_final['Actual']=y_test_cnn
 #%%% Plotting and metrics
 metrics(df_final['Actual'],df_final['Predicted'])
 
-fig,ax=plt.subplots(figsize=(10,5))
+fig,ax=plt.subplots(figsize=(12,7.35))
 ax.plot(df_final['Actual'],label="Actual",color='b')
 ax.plot(df_final['Predicted'],label="Predicted",color='r')
-ax.set_ylabel("Load (KW)")
-
+ax.set_ylabel("Load (KW)",fontsize=24,**csfont)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
 #plt.title("Single Step MLP Actual vs Prediction")
 plt.xlim(datetime.datetime(2019, 6, 3), datetime.datetime(2019, 6, 10))
-plt.legend()
+plt.legend(prop = { "size": 20 })
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\CNN1.jpeg",format="jpeg",dpi=500)
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\CNN1.jpeg",format="jpeg",dpi=1000)
 
 plt.show()
 

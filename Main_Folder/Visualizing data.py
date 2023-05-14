@@ -13,7 +13,9 @@ import matplotlib.pyplot as plt
 from Essential_functions import load_data2,load_data,real_load
 import matplotlib.dates as mdates
 import seaborn as sns
-sns.set_theme()
+custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+csfont = {'fontname':'Times New Roman'}
+sns.set_theme(style="ticks", rc=custom_params)
 # sns.set_context('notebook')
 # sns.set_style("whitegrid")
 #%% Importing data
@@ -51,13 +53,15 @@ weekly_avg=df.groupby(['day','h'],as_index=False).mean()
 x_lables=['Mon','Tue','Wed','Thur','Fri','Sat','Sun']
 x_pos=[i for i in range(12,len(weekly_avg),24)]
 
-fig,ax=plt.subplots(figsize=(10,5))
+fig,ax=plt.subplots(figsize=(12,7))
 ax=sns.lineplot(x=weekly_avg.index, y=weekly_avg['Load'])
 plt.fill_between(weekly_avg.index, weekly_avg['Load'] +std['Load'], weekly_avg['Load'] -std['Load'], alpha=0.3)
-ax.set_xlabel("Time")
-ax.set_ylabel("Load (kW)")
+ax.set_xlabel("Time",fontsize=24,**csfont)
+ax.set_ylabel("Load (kW)",fontsize=24,**csfont)
 plt.xticks(x_pos, x_lables)
-#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\Week_data3.jpeg",format="jpeg",dpi=500)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\Week_data3.jpeg",format="jpeg",dpi=1000)
 plt.show()
 #%% Plotting weekly average
 fig,bx=plt.subplots()
@@ -77,7 +81,6 @@ df['grid_import'].groupby(df.index.strftime('%Y')).sum()
 fig,ex=plt.subplots()
 ex.plot(df['grid_import'].rolling(4*24*7).mean())
 plt.show()
-
 #%%
 
 base   =  [0.251, 0.410]
@@ -96,20 +99,21 @@ plt.figure(figsize=(9, 10.5))
 
 # plot data in grouped manner of bar type
 
-plt.bar(x-3*width, base, width, color='royalblue')
-plt.bar(x-2*width, sarima, width, color='slateblue')
-plt.bar(x-width, mlp, width, color='teal')
-plt.bar(x, cnn, width, color='mediumseagreen')
-plt.bar(x+width, rnn, width, color='darkkhaki')
-plt.bar(x+2*width, lstm, width, color='sandybrown')
-plt.bar(x+3*width, bilstm, width, color='orchid')
-plt.bar(x+4*width, cnnlstm, width, color='indianred')
-
+plt.bar(x-3*width, base, width, color='midnightblue')
+plt.bar(x-2*width, sarima, width, color='mediumblue')
+plt.bar(x-width, mlp, width, color='steelblue')
+plt.bar(x, cnn, width, color='dodgerblue')
+plt.bar(x+width, rnn, width, color='lavender')
+plt.bar(x+2*width, lstm, width, color='royalblue')
+plt.bar(x+3*width, bilstm, width, color='cornflowerblue')
+plt.bar(x+4*width, cnnlstm, width, color='lightsteelblue')
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
 plt.xticks(x, ['RMSE', 'MAE'])
-plt.xlabel("ERROR METRICS")
-plt.ylabel("Scores (kW)")
-plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"])
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\bar_comp.jpeg",format="jpeg",dpi=500)
+plt.xlabel("ERROR METRICS",fontsize=24,**csfont)
+plt.ylabel("Scores (kW)",fontsize=24,**csfont)
+plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"],prop = { "size": 12 })
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\bar_comp.jpeg",format="jpeg",dpi=1000)
 plt.show()
 #%% Comparing performance
 

@@ -27,7 +27,7 @@ sys.path.append(parent)
 
 from statsmodels.graphics.tsaplots import plot_acf,plot_pacf
 from pandas.plotting import autocorrelation_plot
-import pmdarima as pm
+#import pmdarima as pm
 import statsmodels.api as sm
 import statsmodels.tsa.api as smt
 from itertools import product   
@@ -37,8 +37,10 @@ from sklearn.metrics import r2_score, median_absolute_error, mean_absolute_perce
 from sklearn.metrics import median_absolute_error, mean_squared_error, mean_squared_log_error
 
 
-from Essential_functions import load_data,metrics,load_data2,real_load
-sns.set_theme()
+from Essential_functions import load_data,metrics,load_data2,real_load,load_wholedata
+custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+csfont = {'fontname':'Times New Roman'}
+sns.set_theme(style="ticks", rc=custom_params)
 #%% Read Data
 df=real_load()
 df['Load']=df['Load'].astype(np.float32)
@@ -236,15 +238,18 @@ pickle.dump(best_model,open(filename,'wb'))
 
 test.loc[:,'predicted']=forecast
 
-fig,ax=plt.subplots(figsize=(10,5))
+#fig,ax=plt.subplots(figsize=(10,5))
+fig,ax=plt.subplots(figsize=(12,7.35))
 ax.plot(test['Load'],label="Actual",color='b')
 ax.plot(test['predicted'],label="Predicted",color='r')
-ax.set_ylabel("Load (kW)")
+ax.set_ylabel("Load (kW)",fontsize=24,**csfont)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
-#plt.title("SARIMA")
+#plt.title("Fig. 4. Forecasted (Red) and Actual (Blue) Load profile for a week using SARIMA Model")
 
 plt.xlim(datetime.datetime(2019, 6, 3), datetime.datetime(2019, 6, 10))
-plt.legend()
-#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\SARIMA1.jpeg",format="jpeg",dpi=500)
+plt.legend(prop = { "size": 20 })
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\SARIMA1.jpeg",format="jpeg",dpi=1000)
 plt.show()
 

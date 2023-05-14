@@ -34,7 +34,7 @@ df=df[df.index.year==2019]
 df = df.round(decimals=2)
 #%% Hyperparamters
 #Discount factor
-Gamma=1
+Gamma=0.1
 #Number of samples from replay buffer to update 
 Batch_size=32
 #Number of transitions to store before over-writing all transitions?
@@ -165,7 +165,7 @@ for step in range(30000):
     loss=nn.functional.smooth_l1_loss(action_q_values,targets)
     #print(loss)
     # Gradient 
-    optimizer.zero_grad()
+    optimizer.zero_grad() 
     loss.backward()
     optimizer.step()
     
@@ -198,7 +198,7 @@ for i in range(num_episodes):
     episode_reward = 0.0
     done = False
     while done == False:
-        action = online_net.act(obs)
+        action = target_net.act(obs)
         obs, reward, done, info = test_env.step(action)
         episode_reward += reward
         action_v.append(action)

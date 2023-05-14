@@ -21,6 +21,7 @@ from keras.utils import plot_model
 from keras.models import Sequential, Model
 from keras.layers.convolutional import Conv1D, MaxPooling1D
 from sklearn.preprocessing import MinMaxScaler,StandardScaler
+from keras.layers import Bidirectional
 from keras.layers import Dense, LSTM, RepeatVector, TimeDistributed, Flatten,Dropout
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -35,9 +36,9 @@ from Essential_functions import real_load,train_val_test,split_sequence_single,e
 df=real_load()
 #%% Feature Engineering
 #Date/Time Related Features
-df['hour']=df.index.hour
-df['dayofweek']=df.index.dayofweek
-df['month']=df.index.month
+#df['hour']=df.index.hour
+#df['dayofweek']=df.index.dayofweek
+#df['month']=df.index.month
 
 #%% Functions
 def root_mean_squared_error(y_true, y_pred):
@@ -117,7 +118,8 @@ Rolling Geometric Mean: Calculate the geometric mean of the values in a given wi
 df.dropna(inplace=True)
 
 target=df['Load']
-features=df.drop('Load',axis=1)
+features=df
+#features=df.drop(['Load'],axis=1)
 
 train_tar,val_tar,test_tar=train_val_test(target,0.7,0.2)
 train_features,val_features,test_features=train_val_test(df,0.7,0.2)
@@ -159,7 +161,8 @@ lr = 0.0001
 adam = optimizers.Adam(lr)
 
 model_lstm = Sequential()
-model_lstm.add(LSTM(64, activation='relu',return_sequences=True, input_shape=(train_x.shape[1], train_x.shape[2])))
+model_lstm.add(Bidirectional(LSTM(68, activation='relu',return_sequences=True), input_shape=(train_x.shape[1], train_x.shape[2])))
+#model_lstm.add(LSTM(64, activation='relu',return_sequences=True, input_shape=(train_x.shape[1], train_x.shape[2])))
 model_lstm.add(Dropout(0.3))
 model_lstm.add(LSTM(32, activation='relu',return_sequences=True))
 model_lstm.add(Dropout(0.3))
@@ -189,3 +192,8 @@ metrics(test_y,lstm_predict)
 # #plt.xlim(300,800)
 # plt.legend()
 # plt.show()
+
+#%% Model function
+
+def LSTM_mod():
+    

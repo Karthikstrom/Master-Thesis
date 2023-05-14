@@ -12,11 +12,13 @@ import path
 import datetime
 
 import matplotlib.pyplot as plt
+import tensorflow.keras.backend as K
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import tensorflow as tf
 import matplotlib.dates as mdates
+from keras import optimizers
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -28,9 +30,13 @@ from keras.models import Sequential, Model
 from keras.layers import Dense, LSTM, RepeatVector, TimeDistributed, Flatten,Conv1D,MaxPooling1D,Dropout
 from keras.layers import Bidirectional
 from keras.callbacks import EarlyStopping
+custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+csfont = {'fontname':'Times New Roman'}
+sns.set_theme(style="ticks", rc=custom_params)
 import pickle
 #%% Read data
 df=real_load()
+df=df[['Load']]
 #%% Splitting the data (70%,20%,10%)
 n=len(df)
 train=df[:int(n*0.7)]
@@ -56,6 +62,9 @@ def split_sequence_multi(data,look_back,future_steps):
         y.append(y_temp)
     return np.asarray(X),np.asarray(y)
 
+def root_mean_squared_error(y_true, y_pred):
+        return K.sqrt(K.mean(K.square(y_pred - y_true)))
+
 #%% Data windowing 
 ip_steps=24
 op_steps=1
@@ -73,23 +82,26 @@ print("Target shape:", train_y.shape)
 
 #Early Stopping
 early_stop = EarlyStopping(monitor='val_loss', patience=5)
-
+lr = 0.0001
+adam = optimizers.Adam(lr)
 
 lstm_model=Sequential()
-lstm_model.add(Bidirectional(LSTM(64, activation='relu'), input_shape=(train_x.shape[1], train_x.shape[2])))
+lstm_model.add(Bidirectional(LSTM(128, activation='relu'), input_shape=(train_x.shape[1], train_x.shape[2])))
+lstm_model.add(Dense(64,activation='relu'))
+lstm_model.add(Dense(32,activation='relu'))
 lstm_model.add(Dense(op_steps))
-lstm_model.compile(loss='mse', optimizer='adam')
+lstm_model.compile(loss=root_mean_squared_error, optimizer=adam)
 lstm_model.summary()
 
-lstm_history =lstm_model.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=50, verbose=2, callbacks=[early_stop])
+lstm_history =lstm_model.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=50, verbose=2)
 
 plt.plot(lstm_history.history['loss'], label='train')
 plt.plot(lstm_history.history['val_loss'], label='validation')
 plt.legend()
 plt.show()
 #%% Save Model
-filename='SS_BLSTM.sav'
-pickle.dump(lstm_model,open(filename,'wb'))
+# filename='SS_BLSTM.sav'
+# pickle.dump(lstm_model,open(filename,'wb'))
 #%%% Predicting and inversing
 
 lstm_predict=lstm_model.predict(test_x)
@@ -118,14 +130,16 @@ df_final['Actual_diff']=y_test_lstm
 
 metrics(df_final['Actual_diff'],df_final['Predicted_diff'])
 
-fig,bx=plt.subplots(figsize=(10,5))
+fig,bx=plt.subplots(figsize=(12,7.35))
 bx.plot(df_final['Actual_diff'],label="Actual",color='b')
 bx.plot(df_final['Predicted_diff'],label="Predicted",color='r')
 bx.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
-bx.set_ylabel("Load")
+bx.set_ylabel("Load (Kw)",fontsize=24,**csfont)
 plt.xlim(datetime.datetime(2019, 6, 3), datetime.datetime(2019, 6, 10))
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\BiLSTM.jpeg",format="jpeg",dpi=500)
-plt.legend()
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.legend(prop = { "size": 20 })
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\BiLSTM.jpeg",format="jpeg",dpi=1000)
 plt.show()
 
 """

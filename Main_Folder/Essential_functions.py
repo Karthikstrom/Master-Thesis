@@ -18,7 +18,7 @@ from sklearn.preprocessing import MinMaxScaler
 sns.set_context('notebook')
 sns.set_style("whitegrid")
 
-#%%
+#%% Functions
 def metrics(y_true,y_pred):
     y_true,y_pred=np.array(y_true), np.array(y_pred)
     mae=  mean_absolute_error(y_true,y_pred)
@@ -44,14 +44,28 @@ def load_data():
     df_hourly=df_hourly[:-1]
     return df_hourly
 
+# def load_wholedata():
+#     df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Database\Whole_data.csv")
+#     df['Datetime']=pd.to_datetime(df['date_time'], infer_datetime_format=True)
+#     #df['Datetime']=pd.to_datetime(df['date_time'])
+#     df.drop('date_time',axis=1,inplace=True)
+#     df.set_index('Datetime',inplace=True)
+#     df.columns=['RTP','TOU','Load','PV']
+#     df['Load']= df['Load']/1000
+#     df['PV']=df['PV']/1000
+
+#     return df
+
 def load_wholedata():
-    df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Database\Whole_data.csv")
-    df['Datetime']=pd.to_datetime(df['date_time'], infer_datetime_format=True)
-    df.drop('date_time',axis=1,inplace=True)
-    df.set_index('Datetime',inplace=True)
+    df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Database\Whole_data2.csv")
+    df['Datetime1']=pd.to_datetime(df['Datetime'], format='%d-%m-%Y %H:%M')
+    #df['Datetime']=pd.to_datetime(df['date_time'])
+    df.drop('Datetime',axis=1,inplace=True)
+    df.set_index('Datetime1',inplace=True)
     df.columns=['RTP','TOU','Load','PV']
     df['Load']= df['Load']/1000
     df['PV']=df['PV']/1000
+
     return df
 
 def load_data2():
@@ -167,7 +181,7 @@ def real_load():
     df_hourly['Water_heater']=df['E_solarheating_pump_power'].resample('H').mean()
     df_hourly['Washing_machine']=df['E_washing_machine_power'].resample('H').mean()
     df_hourly['Dehumidifier']=df['E_dehumidifier_power'].resample('H').mean()
-    df_hourly.interpolate(method='linear',inplace=True)
+    
     df_hourly=df_hourly.div(1000)
     
     #Weather features
@@ -177,8 +191,33 @@ def real_load():
     df_hourly['Humidity_in']=df1['E_weather_humidity_in']
     df_hourly['Humidity_out']=df1['E_weather_humidity_out']
     
+    dfp=load_wholedata()
+    dfp=dfp['2016-12-01':'2019-07-30']
+    df_hourly['RT Price']=dfp['RTP']
+    #df_hourly['PV']=1000*df_hourly['PV']
+    df_hourly.interpolate(method='linear',inplace=True)
     return df_hourly
 
 def corr_heat_map(df):
     corr_mat=df.corr()
-    sns.heatmap(corr_mat, cmap='coolwarm')
+    sns.heatmap(corr_mat, cmap='Greens')
+    plt.xticks(rotation=55)
+    
+#%% Correlation heat map
+# df=real_load()
+# corr_mat=df.corr()
+# corr_mat=corr_mat[['Load','PV','RT Price']]
+# corr_mat=corr_mat.transpose()
+# sns.set(font_scale=3)
+# fig,a1=plt.subplots(figsize=(35,22))
+# cmap = sns.diverging_palette(220, 20, sep=20, as_cmap=True)
+# #a1=sns.heatmap(corr_mat, cmap='Greens')
+# a1=sns.heatmap(corr_mat, cmap=cmap)
+# plt.yticks(rotation=360,fontsize=30)
+# plt.xticks(rotation=45,fontsize=30)
+# plt.title("Feature Heat Map",fontsize=40)
+# plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\Heat_map.jpeg",format="jpeg",dpi=500)
+# plt.show()
+
+
+
