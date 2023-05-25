@@ -46,13 +46,11 @@ df=real_load()
 df['Hour']=df.index.hour
 df['Dayofweek']=df.index.dayofweek
 df['Month']=df.index.month
-%df=df['2016-12-01':'2019-07-30']
 #%% Splitting the data (70%,20%,10%)
 df.dropna(inplace=True)
 
-target=df['PV']
-features=df[['PV','Hour','Dayofweek','Month','Humidity_out','Temp_out','Pressure_out']]
-
+target=df['Load']
+features=df[['Load','Hour','Dayofweek','Month','Dryer','Temp_out','Humidity_out']]
 train_tar,val_tar,test_tar=train_val_test(target,0.7,0.2)
 train_features,val_features,test_features=train_val_test(features,0.7,0.2)
 
@@ -114,8 +112,9 @@ op_steps=1
 #%%
 optimizer = Adam(learning_rate=0.0001)
 cnn_model=Sequential()
-cnn_model.add(Conv1D(filters=16, kernel_size=4, activation='relu', input_shape=(train_x.shape[1],train_x.shape[2])))
+cnn_model.add(Conv1D(filters=7, kernel_size=3, activation='relu', input_shape=(train_x.shape[1],train_x.shape[2])))
 cnn_model.add(Flatten())
+#cnn_model.add(Dropout(0.2))
 cnn_model.add(Dense(10, activation='relu'))
 cnn_model.add(Dense(op_steps))
 cnn_model.compile(loss=root_mean_squared_error, optimizer=optimizer)
@@ -147,16 +146,6 @@ df_final.set_index('final_idx',inplace=True)
 df_final['Predicted']=y_pred_cnn
 df_final['Actual']=y_test_cnn
 #%%% Plotting and metrics
-
-df_final['Hour']=df_final.index.hour
-
-df_final.loc[(df_final.index.hour == 0) | (df_final.index.hour == 1) | 
-             (df_final.index.hour == 2) | (df_final.index.hour == 3) |
-             (df_final.index.hour == 4) | (df_final.index.hour == 21)| 
-             (df_final.index.hour == 21)| (df_final.index.hour == 22)|
-             (df_final.index.hour == 23), "Predicted"] = 0
-
-
 metrics(df_final['Actual'],df_final['Predicted'])
 
 fig,ax=plt.subplots(figsize=(12,7.35))

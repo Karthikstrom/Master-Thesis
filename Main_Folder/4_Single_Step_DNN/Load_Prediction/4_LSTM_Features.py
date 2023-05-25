@@ -50,8 +50,9 @@ df['Month']=df.index.month
 #%% Splitting the data (70%,20%,10%)
 df.dropna(inplace=True)
 
-target=df['PV']
-features=df[['PV','Hour','Dayofweek','Month','Humidity_out','Temp_out','Pressure_out']]
+target=df['Load']
+features=df[['Load','Hour','Dayofweek','Month','Dryer','Temp_out','Humidity_out']]
+
 
 train_tar,val_tar,test_tar=train_val_test(target,0.7,0.2)
 train_features,val_features,test_features=train_val_test(features,0.7,0.2)
@@ -120,13 +121,13 @@ optimizer=Adam(0.0001)
 
 lstm_model=Sequential()
 lstm_model.add(LSTM(64, activation='relu', input_shape=(train_x.shape[1], train_x.shape[2])))
-#lstm_model.add(Dropout(0.3))
-lstm_model.add(Dense(8, activation='relu'))
+lstm_model.add(Dropout(0.1))
+#lstm_model.add(Dense(8, activation='relu'))
 lstm_model.add(Dense(op_steps))
 lstm_model.compile(loss=root_mean_squared_error, optimizer=optimizer)
 lstm_model.summary()
 
-lstm_history =lstm_model.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=50, verbose=2)
+lstm_history =lstm_model.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=100, verbose=2)
 
 plt.plot(lstm_history.history['loss'], label='train')
 plt.plot(lstm_history.history['val_loss'], label='validation')
@@ -164,19 +165,9 @@ df_final['Predicted']=pred_y
 df_final['Actual']=test_y
 df_final['Residuals']=df_final['Actual']-df_final['Predicted']
 #%%% Metrics and plotting
-
-df_final['Hour']=df_final.index.hour
-
-df_final.loc[(df_final.index.hour == 0) | (df_final.index.hour == 1) | 
-             (df_final.index.hour == 2) | (df_final.index.hour == 3) |
-             (df_final.index.hour == 4) | (df_final.index.hour == 21)| 
-             (df_final.index.hour == 21)| (df_final.index.hour == 22)|
-             (df_final.index.hour == 23), "Predicted"] = 0
-
-
 metrics(test_y,pred_y)
 
-fig,ax=plt.subplots(figsize=(12,7.35))
+fig,ax=plt.subplots(figsize=(12,8))
 ax.plot(df_final['Actual'],label="Actual",color='b')
 ax.plot(df_final['Predicted'],label="Predicted",color='r')
 ax.set_ylabel("Load (KW)",fontsize=24,**csfont)
@@ -186,6 +177,6 @@ plt.xticks(fontsize=20,**csfont)
 plt.xlim(datetime.datetime(2019, 6, 3), datetime.datetime(2019, 6, 10))
 plt.legend(prop = { "size": 20 })
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Plots\Price_Prediction\MLP.jpeg",format="jpeg",dpi=1000)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\Load_best.jpeg",format="jpeg",dpi=300)
 
 plt.show()

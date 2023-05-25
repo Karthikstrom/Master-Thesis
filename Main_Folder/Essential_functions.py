@@ -63,8 +63,8 @@ def load_wholedata():
     df.drop('Datetime',axis=1,inplace=True)
     df.set_index('Datetime1',inplace=True)
     df.columns=['RTP','TOU','Load','PV']
-    df['Load']= df['Load']/1000
-    df['PV']=df['PV']/1000
+    df['Load']= df['Load']
+    df['PV']=df['PV']
 
     return df
 
@@ -193,7 +193,7 @@ def real_load():
     
     dfp=load_wholedata()
     dfp=dfp['2016-12-01':'2019-07-30']
-    df_hourly['RT Price']=dfp['RTP']
+    df_hourly['RTP']=dfp['RTP']
     #df_hourly['PV']=1000*df_hourly['PV']
     df_hourly.interpolate(method='linear',inplace=True)
     return df_hourly

@@ -28,6 +28,7 @@ df=df[df.index.year==2019]
 df['Hour']=df.index.hour
 #%% Normalizing historic observations
 df[:] = minmax_scale(df)
+df = df.round(3)
 #%% Loading packages
 import gym
 from gym import spaces
@@ -76,6 +77,7 @@ class EMSenv(gym.Env):
         self.min_pv=0
         self.min_price=0
         self.min_hour=0
+        #self.min_grid_ex=-(self.df['RTP'].max())*(self.df['Load'].max())*5
         
         #Setting the higher limit for the observations
         #Arbitary values
@@ -83,17 +85,21 @@ class EMSenv(gym.Env):
         self.max_pv=(self.df['PV'].max())*1.2
         self.max_price=(self.df['RTP'].max())*1.2
         self.max_hour=23
+        #self.max_grid_ex=(self.df['RTP'].max())*(self.df['Load'].max())*5
         
         #Runtime observation
-        self.min_battery_cap=1
-        self.max_battery_cap=6
+        #self.min_battery_cap=1
+        #self.max_battery_cap=6
         
+        #State of charge limits
+        self.soc_min=0
+        self.soc_max=1
         
         #Setting the low and high of observation space
-        self.obs_low=np.array([self.min_load,self.min_price,self.min_pv,self.min_battery_cap,self.min_hour])
-        self.obs_high=np.array([self.max_load,self.max_price,self.max_pv,self.max_battery_cap,self.max_hour])
+        self.obs_low=np.array([self.min_load,self.min_price,self.min_pv,self.soc_min,self.min_hour])
+        self.obs_high=np.array([self.max_load,self.max_price,self.max_pv,self.soc_max,self.max_hour])
         
-        self.observation_space=spaces.Box(low=self.obs_low,high=self.obs_high)
+        self.observation_space=spaces.Box(low=self.obs_low,high=self.obs_high) 
             
         """
         ----------------------------------------------------------------------
@@ -120,8 +126,32 @@ class EMSenv(gym.Env):
         #Set the start date number
         self.test_day_counter=31
         
+        #Battery SOC specs
+        self.eff_imp=0.9
+        self.eff_exp=0.9
+        self.battery_capacity=6.6
+        self.min_battery_cap=1
+        self.max_battery_cap=6
+        
     def map_action(self,action):
-        return self.discretized_actions[action]
+        
+        if (action==51)|(action==50):
+            return 0
+        else:
+            return self.discretized_actions[action]
+        
+    def SOC(self,soc_last,action):
+        if action<50:
+            pb_exp=self.map_action(action)
+            pb_imp=0
+        else:
+            pb_imp=self.map_action(action)
+            pb_exp=0
+            
+        soc_temp=soc_last + (((pb_imp*self.eff_imp)+(pb_exp/self.eff_exp))/(self.battery_capacity))
+        
+        return soc_temp
+            
         
     def reset(self):
         
@@ -145,15 +175,18 @@ class EMSenv(gym.Env):
         self.pv=self.df['PV'][self.start_idx:self.end_idx]
         self.price=self.df['RTP'][self.start_idx:self.end_idx]
         self.hour_feature=self.df['Hour'][self.start_idx:self.end_idx]
+        soc=0.4
+        soc=np.round(soc,decimals=2)
         
         #Initializing random battery capacity
         battery_cap = round(self.rng.uniform(self.min_battery_cap, self.max_battery_cap), 2)
         #Reset should pass the initial observation
-        self.current_obs=np.array([self.load[0],self.price[0],self.pv[0],battery_cap,self.hour_feature[0]])
+        self.current_obs=np.array([self.load[0],self.price[0],self.pv[0],soc,self.hour_feature[0]])
         
         
         #Reset hour counter
         self.hour_num=0
+        
         
         return self.current_obs
 
@@ -178,11 +211,12 @@ class EMSenv(gym.Env):
         self.pv=self.df['PV'][self.start_idx:self.end_idx]
         self.price=self.df['RTP'][self.start_idx:self.end_idx]
         self.hour_feature=self.df['Hour'][self.start_idx:self.end_idx]
-        
+        soc=0.4
+        soc=np.round(soc,decimals=2)
         #Initializing random battery capacity
         battery_cap = round(self.rng.uniform(self.min_battery_cap, self.max_battery_cap), 2)
         #Reset should pass the initial observation
-        self.current_obs=np.array([self.load[0],self.price[0],self.pv[0],battery_cap,self.hour_feature[0]])
+        self.current_obs=np.array([self.load[0],self.price[0],self.pv[0],soc,self.hour_feature[0]])
         
         
         #Incrementing test_day_counter to the next day until no of episodes needed
@@ -203,7 +237,6 @@ class EMSenv(gym.Env):
         # Action looks like np.array([20.0]). We need to convert that to float 20.0 for easier calculation
         #battery_action=action[0]
         battery_action=self.map_action(action)
-        
         #Next time step
         self.hour_num=self.hour_num+1
         
@@ -220,22 +253,27 @@ class EMSenv(gym.Env):
         #Current observation
         next_battery_cap=self.current_obs[3]+battery_action
         next_battery_cap=np.round(next_battery_cap,decimals=2)
-        #Next observation array
-        next_obs=[next_load,next_price,next_pv,next_battery_cap,next_hour]
         
-        #Compute reward
+        #SOC calculation
+        next_soc=self.SOC(self.current_obs[3],action)
+        next_soc=np.round(next_soc,decimals=2)
         
         #transported to the grid (gt)
         grid_t=next_load-next_pv+battery_action
         
-        #Reward fro battery limits
-        if (next_battery_cap>=self.max_discharging) & (next_battery_cap<=self.max_charging):
+        #Next observation array
+        next_obs=[next_load,next_price,next_pv,next_soc,next_hour]
+        
+        #Compute reward
+        
+        #Reward for battery limits
+        if (next_soc>=0.1) & (next_soc<=0.85):
             reward_1=0
         else:
-            reward_1=-1000
-        #
-        
-        
+            reward_1=-100
+
+
+
         reward=-5*(next_price*grid_t)+reward_1
          
         done=False
@@ -252,6 +290,7 @@ class EMSenv(gym.Env):
 
 
     def soc(battery_capacity):
+        
         return 
     def render(self, mode="human"):
         """
@@ -290,7 +329,7 @@ class EMSenv(gym.Env):
 #     while done==False:
 #         action=test_env.action_space.sample()
 #         obs,r,done,_=test_env.step(action)
-#         print(r)
+#         print(test_env.map_action(action),obs[3])
 # #%%
 
 # num_actions = test_env.action_space.n

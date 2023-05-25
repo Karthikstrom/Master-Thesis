@@ -49,8 +49,8 @@ df['Month']=df.index.month
 #%% Splitting the data (70%,20%,10%)
 df.dropna(inplace=True)
 
-target=df['PV']
-features=df[['PV','Hour','Dayofweek','Month','Humidity_out','Temp_out','Pressure_out']]
+target=df['Load']
+features=df[['Load','Hour','Dayofweek','Month','Dryer','Temp_out','Humidity_out']]
 
 train_tar,val_tar,test_tar=train_val_test(target,0.7,0.2)
 train_features,val_features,test_features=train_val_test(features,0.7,0.2)
@@ -119,18 +119,25 @@ optimizer = Adam(learning_rate=0.0001)
 
 rnn_model=Sequential()
 rnn_model.add(SimpleRNN(64, activation='relu', input_shape=(train_x.shape[1], train_x.shape[2])))
-#rnn_model.add(Dropout(0.2))
-rnn_model.add(Dense(8,activation='relu'))
+rnn_model.add(Dropout(0.4))
+#rnn_model.add(Dense(8,activation='relu'))
 #rnn_model.add(Dropout(0.2))
 rnn_model.add(Dense(op_steps))
 rnn_model.compile(loss=root_mean_squared_error, optimizer=optimizer)
 rnn_model.summary()
 
-rnn_history =rnn_model.fit(train_x,train_y, validation_data=(val_x, val_y),epochs=70, verbose=2)
-
-plt.plot(rnn_history.history['loss'], label='train')
-plt.plot(rnn_history.history['val_loss'], label='validation')
-plt.legend()
+rnn_history =rnn_model.fit(train_x,train_y, validation_data=(val_x, val_y),epochs=80, verbose=2)
+#%%
+fig,bx=plt.subplots(figsize=(12,7.35))
+bx.plot(rnn_history.history['loss'], label='train')
+bx.plot(rnn_history.history['val_loss'], label='validation')
+bx.set_ylabel("Loss",fontsize=24,**csfont)
+bx.set_xlabel("Epochs",fontsize=24,**csfont)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.title("Training vs Validation Loss",fontsize=24,**csfont)
+plt.legend(prop = { "size": 20 })
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\Load_loss.jpeg",format="jpeg",dpi=300)
 plt.show()
 #%% Save Model
 # filename='SS_MLP.sav'
@@ -163,14 +170,6 @@ df_final.set_index('final_idx',inplace=True)
 df_final['Predicted']=pred_y
 df_final['Actual']=test_y
 #%%% Metrics and plotting
-
-df_final['Hour']=df_final.index.hour
-
-df_final.loc[(df_final.index.hour == 0) | (df_final.index.hour == 1) | 
-             (df_final.index.hour == 2) | (df_final.index.hour == 3) |
-             (df_final.index.hour == 4) | (df_final.index.hour == 21)| 
-             (df_final.index.hour == 21)| (df_final.index.hour == 22)|
-             (df_final.index.hour == 23), "Predicted"] = 0
 
 df_final['Residuals']=df_final['Actual']-df_final['Predicted']
 

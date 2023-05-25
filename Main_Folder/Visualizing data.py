@@ -54,14 +54,14 @@ x_lables=['Mon','Tue','Wed','Thur','Fri','Sat','Sun']
 x_pos=[i for i in range(12,len(weekly_avg),24)]
 
 fig,ax=plt.subplots(figsize=(12,7))
-ax=sns.lineplot(x=weekly_avg.index, y=weekly_avg['Load'])
-plt.fill_between(weekly_avg.index, weekly_avg['Load'] +std['Load'], weekly_avg['Load'] -std['Load'], alpha=0.3)
+ax=sns.lineplot(x=weekly_avg.index, y=weekly_avg['PV'])
+plt.fill_between(weekly_avg.index, weekly_avg['PV'] +std['PV'], weekly_avg['PV'] -std['PV'], alpha=0.3)
 ax.set_xlabel("Time",fontsize=24,**csfont)
-ax.set_ylabel("Load (kW)",fontsize=24,**csfont)
+ax.set_ylabel("PV Generated (Kw)",fontsize=24,**csfont)
 plt.xticks(x_pos, x_lables)
 plt.yticks(fontsize=20,**csfont)
 plt.xticks(fontsize=20,**csfont)
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\Week_data3.jpeg",format="jpeg",dpi=1000)
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\pv_ov.jpeg",format="jpeg",dpi=1000)
 plt.show()
 #%% Plotting weekly average
 fig,bx=plt.subplots()
@@ -81,7 +81,115 @@ df['grid_import'].groupby(df.index.strftime('%Y')).sum()
 fig,ex=plt.subplots()
 ex.plot(df['grid_import'].rolling(4*24*7).mean())
 plt.show()
-#%%
+
+#%% Load R squared
+
+base   =  [-0.356]
+sarima =  [0.149]
+mlp    =  [0.438]
+cnn    =  [0.435]
+rnn    =  [0.448]
+lstm   =  [0.453]
+bilstm =  [0.450]
+cnnlstm=  [0.444]
+
+x = np.arange(len(sarima))
+width = 0.1
+  
+plt.figure(figsize=(20, 35))
+
+# plot data in grouped manner of bar type
+
+plt.bar(x-3*width, base, width, color='midnightblue')
+plt.bar(x-2*width, sarima, width, color='mediumblue')
+plt.bar(x-width, mlp, width, color='steelblue')
+plt.bar(x, cnn, width, color='dodgerblue')
+plt.bar(x+width, rnn, width, color='lavender')
+plt.bar(x+2*width, lstm, width, color='royalblue')
+plt.bar(x+3*width, bilstm, width, color='cornflowerblue')
+plt.bar(x+4*width, cnnlstm, width, color='lightsteelblue')
+plt.yticks(fontsize=45,**csfont)
+plt.xticks(fontsize=45,**csfont)
+plt.xticks([])
+#plt.xlabel("ERROR METRICS",fontsize=50,**csfont)
+plt.ylabel("R Squared values",fontsize=50,**csfont)
+plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"],prop = { "size": 35 })
+plt.title("R squared of Actual vs Predicted Load ",fontsize=60,**csfont)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\rs_load.jpeg",format="jpeg",dpi=200)
+plt.show()
+
+#%% PV R squared
+
+base   =  [0.593]
+sarima =  [0.188]
+mlp    =  [0.921]
+cnn    =  [0.926]
+rnn    =  [0.921]
+lstm   =  [0.927]
+bilstm =  [0.928]
+cnnlstm=  [0.923]
+
+x = np.arange(len(sarima))
+width = 0.1
+  
+plt.figure(figsize=(20, 35))
+
+# plot data in grouped manner of bar type
+
+plt.bar(x-3*width, base, width, color='midnightblue')
+plt.bar(x-2*width, sarima, width, color='mediumblue')
+plt.bar(x-width, mlp, width, color='steelblue')
+plt.bar(x, cnn, width, color='dodgerblue')
+plt.bar(x+width, rnn, width, color='lavender')
+plt.bar(x+2*width, lstm, width, color='royalblue')
+plt.bar(x+3*width, bilstm, width, color='cornflowerblue')
+plt.bar(x+4*width, cnnlstm, width, color='lightsteelblue')
+plt.yticks(fontsize=45,**csfont)
+plt.xticks(fontsize=45,**csfont)
+plt.xticks([])
+#plt.xlabel("ERROR METRICS",fontsize=50,**csfont)
+plt.ylabel("R Squared values",fontsize=50,**csfont)
+#plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"],prop = { "size": 35 })
+plt.title("R squared of Actual vs Predicted PV Generation ",fontsize=60,**csfont)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\rs_PV.jpeg",format="jpeg",dpi=300)
+plt.show()
+
+#%% Price R squared
+
+base   =  [0.433]
+sarima =  [0.142]
+mlp    =  [0.920]
+cnn    =  [0.950]
+rnn    =  [0.956]
+lstm   =  [0.951]
+bilstm =  [0.960]
+cnnlstm=  [0.916]
+
+x = np.arange(len(sarima))
+width = 0.1
+  
+plt.figure(figsize=(20, 35))
+
+# plot data in grouped manner of bar type
+
+plt.bar(x-3*width, base, width, color='midnightblue')
+plt.bar(x-2*width, sarima, width, color='mediumblue')
+plt.bar(x-width, mlp, width, color='steelblue')
+plt.bar(x, cnn, width, color='dodgerblue')
+plt.bar(x+width, rnn, width, color='lavender')
+plt.bar(x+2*width, lstm, width, color='royalblue')
+plt.bar(x+3*width, bilstm, width, color='cornflowerblue')
+plt.bar(x+4*width, cnnlstm, width, color='lightsteelblue')
+plt.yticks(fontsize=45,**csfont)
+plt.xticks(fontsize=45,**csfont)
+plt.xticks([])
+#plt.xlabel("ERROR METRICS",fontsize=50,**csfont)
+plt.ylabel("R Squared values",fontsize=50,**csfont)
+#plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"],prop = { "size": 35 },bbox_to_anchor=(1.02, 1))
+plt.title("R squared of Actual vs Predicted Electricity ",fontsize=60,**csfont)
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\rs_Price.jpeg",format="jpeg",dpi=300)
+plt.show()
+#%% Load
 
 base   =  [0.251, 0.410]
 sarima =  [0.231, 0.322]
@@ -95,7 +203,7 @@ cnnlstm=  [0.181,0.271]
 x = np.arange(len(sarima))
 width = 0.1
   
-plt.figure(figsize=(9, 10.5))
+plt.figure(figsize=(25, 30))
 
 # plot data in grouped manner of bar type
 
@@ -107,14 +215,89 @@ plt.bar(x+width, rnn, width, color='lavender')
 plt.bar(x+2*width, lstm, width, color='royalblue')
 plt.bar(x+3*width, bilstm, width, color='cornflowerblue')
 plt.bar(x+4*width, cnnlstm, width, color='lightsteelblue')
-plt.yticks(fontsize=20,**csfont)
-plt.xticks(fontsize=20,**csfont)
-plt.xticks(x, ['RMSE', 'MAE'])
-plt.xlabel("ERROR METRICS",fontsize=24,**csfont)
-plt.ylabel("Scores (kW)",fontsize=24,**csfont)
-plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"],prop = { "size": 12 })
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\bar_comp.jpeg",format="jpeg",dpi=1000)
+plt.yticks(fontsize=45,**csfont)
+plt.xticks(fontsize=45,**csfont)
+plt.xticks(x, ['MAE', 'RMSE'])
+plt.xlabel("ERROR METRICS",fontsize=50,**csfont)
+plt.ylabel("Scores (kW)",fontsize=50,**csfont)
+plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"],prop = { "size": 35 })
+#plt.title("Load Prediction Results",fontsize=60,**csfont)
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\metrics_load.jpeg",format="jpeg",dpi=300)
 plt.show()
+
+#%% Price
+
+base   =  [43.3, 65.9]
+sarima =  [49, 59.9]
+mlp    =  [19,24.6 ]
+cnn    =  [13.8,19.3 ]
+rnn    =  [13.4, 18.1]
+lstm   =  [13.6,19.3]
+bilstm =  [12.5,17.4]
+cnnlstm=  [17.3,25.2]
+
+x = np.arange(len(sarima))
+width = 0.1
+  
+plt.figure(figsize=(40, 30))
+
+# plot data in grouped manner of bar type
+
+plt.bar(x-3*width, base, width, color='midnightblue')
+plt.bar(x-2*width, sarima, width, color='mediumblue')
+plt.bar(x-width, mlp, width, color='steelblue')
+plt.bar(x, cnn, width, color='dodgerblue')
+plt.bar(x+width, rnn, width, color='lavender')
+plt.bar(x+2*width, lstm, width, color='royalblue')
+plt.bar(x+3*width, bilstm, width, color='cornflowerblue')
+plt.bar(x+4*width, cnnlstm, width, color='lightsteelblue')
+plt.yticks(fontsize=45,**csfont)
+plt.xticks(fontsize=45,**csfont)
+plt.xticks(x, ['MAE', 'RMSE'])
+plt.xlabel("ERROR METRICS",fontsize=50,**csfont)
+plt.ylabel("Price (€/Mwh)",fontsize=50,**csfont)
+plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"],prop = { "size": 35 })
+plt.title("Electricity Price Prediction Results",fontsize=60,**csfont)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\metrics_Price.jpeg",format="jpeg",dpi=300)
+plt.show()
+
+
+#%% PV
+
+base   =  [0.268, 0.538]
+sarima =  [0.274, 0.434]
+mlp    =  [0.124, 0.237]
+cnn    =  [0.114, 0.229]
+rnn    =  [0.126, 0.237]
+lstm   =  [0.117,0.227]
+bilstm =  [0.118,0.226]
+cnnlstm=  [0.128,0.233]
+
+x = np.arange(len(sarima))
+width = 0.1
+  
+plt.figure(figsize=(40, 30))
+
+# plot data in grouped manner of bar type
+
+plt.bar(x-3*width, base, width, color='midnightblue')
+plt.bar(x-2*width, sarima, width, color='mediumblue')
+plt.bar(x-width, mlp, width, color='steelblue')
+plt.bar(x, cnn, width, color='dodgerblue')
+plt.bar(x+width, rnn, width, color='lavender')
+plt.bar(x+2*width, lstm, width, color='royalblue')
+plt.bar(x+3*width, bilstm, width, color='cornflowerblue')
+plt.bar(x+4*width, cnnlstm, width, color='lightsteelblue')
+plt.yticks(fontsize=45,**csfont)
+plt.xticks(fontsize=45,**csfont)
+plt.xticks(x, ['MAE', 'RMSE'])
+plt.xlabel("ERROR METRICS",fontsize=50,**csfont)
+plt.ylabel("Scores (kW)",fontsize=50,**csfont)
+plt.legend(["Baseline", "SARIMA", "MLP","CNN","RNN","LSTM","Bidirectional LSTM","CNN-LSTM Hybrid"],prop = { "size": 35 })
+plt.title("PV Prediction Results",fontsize=60,**csfont)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\metrics_PV.jpeg",format="jpeg",dpi=300)
+plt.show()
+
 #%% Comparing performance
 
 # Make a random dataset:

@@ -21,7 +21,8 @@ sns.set_theme()
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
-sys.path.append(parent)
+parent1 = os.path.dirname(parent)
+sys.path.append(parent1)
 
 from Essential_functions import load_wholedata,metrics,data_split,split_feature_single,train_val_test,real_load
 
@@ -50,8 +51,8 @@ df['Month']=df.index.month
 #%% Splitting the data (70%,20%,10%)
 df.dropna(inplace=True)
 
-target=df['PV']
-features=df[['PV','Hour','Dayofweek','Month','Humidity_out','Temp_out','Pressure_out']]
+target=df['Load']
+features=df[['Load','Hour','Dayofweek','Month','Dryer','Temp_out','Humidity_out']]
 
 train_tar,val_tar,test_tar=train_val_test(target,0.7,0.2)
 train_features,val_features,test_features=train_val_test(features,0.7,0.2)
@@ -115,8 +116,8 @@ print("Feature input shape:", train_x.shape)
 print("Label shape:", train_y.shape)
 #%% MLP model
 
-no_of_neurons1=120
-no_of_neurons2=80
+no_of_neurons1=60
+no_of_neurons2=40
 op_steps=1
 
 optimizer = Adam(learning_rate=0.0001)
@@ -124,14 +125,14 @@ optimizer = Adam(learning_rate=0.0001)
  
 model_mlp = Sequential()
 model_mlp.add(Dense(no_of_neurons1,activation='relu',input_dim=train_x.shape[1]))
-#model_mlp.add(Dropout( 0.1779))
+model_mlp.add(Dropout( 0.1779))
 model_mlp.add(Dense(no_of_neurons2,activation='relu'))
-#model_mlp.add(Dropout( 0.1779))
+model_mlp.add(Dropout( 0.1779))
 model_mlp.add(Dense(op_steps))
 model_mlp.compile(loss=root_mean_squared_error, optimizer=optimizer)
 model_mlp.summary()
 
-mlp_history = model_mlp.fit(train_x, train_y, validation_data=(val_x,val_y), epochs=40, verbose=2)
+mlp_history = model_mlp.fit(train_x, train_y, validation_data=(val_x,val_y), epochs=80, verbose=2)
 
 plt.plot(mlp_history.history['loss'], label='train')
 plt.plot(mlp_history.history['val_loss'], label='validation')
@@ -169,15 +170,8 @@ df_final['Predicted']=pred_y
 df_final['Actual']=test_y
 #%%% Metrics and plotting
 
-df_final['Hour']=df_final.index.hour
 
-df_final.loc[(df_final.index.hour == 0) | (df_final.index.hour == 1) | 
-             (df_final.index.hour == 2) | (df_final.index.hour == 3) |
-             (df_final.index.hour == 4) | (df_final.index.hour == 21)| 
-             (df_final.index.hour == 21)| (df_final.index.hour == 22)|
-             (df_final.index.hour == 23), "Predicted"] = 0
-
-
+df_final['Residuals']=df_final['Actual']-df_final['Predicted']
 metrics(df_final['Actual'],df_final['Predicted'])
 
 fig,ax=plt.subplots(figsize=(12,7.35))

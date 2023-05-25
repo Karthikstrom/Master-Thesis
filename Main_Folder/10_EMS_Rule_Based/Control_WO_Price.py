@@ -41,7 +41,7 @@ df=df[df.index.year==2019]
 
 #adding pv penetration and calculating mismatch
 #df['Load']=df['Load']*50
-df['PV']=7*df['PV']
+df['PV']=df['PV']
 #df['Mismatch']=df['PV']-df['Load']
 
 #%%

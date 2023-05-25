@@ -13,8 +13,6 @@ import seaborn as sns
 import tensorflow as tf
 import itertools
 import math
-
-
 #%% Functions
 
 h=1

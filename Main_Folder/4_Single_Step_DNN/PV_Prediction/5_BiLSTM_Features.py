@@ -129,9 +129,18 @@ lstm_model.summary()
 
 lstm_history =lstm_model.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=50, verbose=2)
 
-plt.plot(lstm_history.history['loss'], label='train')
-plt.plot(lstm_history.history['val_loss'], label='validation')
-plt.legend()
+#%%
+fig,bx=plt.subplots(figsize=(12,7.35))
+bx.plot(lstm_history.history['loss'], label='train')
+bx.plot(lstm_history.history['val_loss'], label='validation')
+bx.set_ylabel("Loss",fontsize=24,**csfont)
+bx.set_xlabel("Epochs",fontsize=24,**csfont)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.title("Training vs Validation Loss",fontsize=24,**csfont)
+plt.legend(prop = { "size": 20 })
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\PV_loss.jpeg",format="jpeg",dpi=300)
+plt.show()
 #%% Save Model
 # filename='SS_MLP.sav'
 # pickle.dump(model_mlp,open(filename,'wb'))
@@ -175,16 +184,16 @@ df_final['Residuals']=df_final['Actual']-df_final['Predicted']
 
 metrics(test_y,pred_y)
 
-fig,ax=plt.subplots(figsize=(12,7.35))
+fig,ax=plt.subplots(figsize=(12,8))
 ax.plot(df_final['Actual'],label="Actual",color='b')
 ax.plot(df_final['Predicted'],label="Predicted",color='r')
-ax.set_ylabel("Load (KW)",fontsize=24,**csfont)
+ax.set_ylabel("PV Generation (KW)",fontsize=24,**csfont)
 plt.yticks(fontsize=20,**csfont)
 plt.xticks(fontsize=20,**csfont)
 #plt.title("Single Step MLP Actual vs Prediction")
 plt.xlim(datetime.datetime(2019, 6, 3), datetime.datetime(2019, 6, 10))
 plt.legend(prop = { "size": 20 })
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Plots\Price_Prediction\MLP.jpeg",format="jpeg",dpi=1000)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\PV_best.jpeg",format="jpeg",dpi=1000)
 
 plt.show()

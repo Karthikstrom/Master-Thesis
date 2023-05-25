@@ -23,12 +23,13 @@ from keras.models import load_model
 env=EMSenv()
 #%% Hyperparameter
 Replay_memory_size=25000
-Episodes=1000
-Min_replay_memory=1000
+Episodes=100
+Min_replay_memory=100
 minibatch_size=32
 Target_update_every=100
-Discount_rate=0.1
+Discount_rate=0.0001
 model_filename = 'dqn_model.h5'
+model_filename1 = 'dqn_model1.h5'
 weights_filename='dqn_model_weights.h5'
 
 
@@ -36,7 +37,7 @@ weights_filename='dqn_model_weights.h5'
 epsilon = 1  # not a constant, going to be decayed
 EPSILON_DECAY = 0.99
 MIN_EPSILON = 0.1
-epsilon_dec=[]
+epsilon_dec=[] 
 #%% Creating the agent
 class DQNAgent:
     def __init__(self):
@@ -51,6 +52,9 @@ class DQNAgent:
         self.replay_memory=deque(maxlen=Replay_memory_size)
         
         self.target_update_counter=0
+        
+        #Network loss counter
+        self.loss=[]
         
         
     def create_model(self):
@@ -123,8 +127,12 @@ class DQNAgent:
             y.append(current_qs)
             
         # Fit on all samples as one batch, log only on terminal state
-        self.model.fit(np.array(X), np.array(y), batch_size=minibatch_size, verbose=0, shuffle=False)
+        # loss list
         
+        self.history=self.model.fit(np.array(X), np.array(y), batch_size=minibatch_size, verbose=0, shuffle=False)
+        training_loss=self.history.history['loss']
+        self.loss.append(training_loss[-1])
+    
         # Update target network counter every episode
         if terminal_state:
             self.target_update_counter += 1
@@ -164,19 +172,23 @@ for episode in tqdm(range(1,Episodes+1),ascii=True,unit="episode"):
         step+=1
         
     ep_rewards.append(episode_reward)
-    print(episode_reward)
+    #print(episode_reward)
         # Decay epsilon
     if epsilon > MIN_EPSILON:
         epsilon *= EPSILON_DECAY
         epsilon = max(MIN_EPSILON, epsilon)
         epsilon_dec.append(epsilon)
-
+    
+    
+    #Plotting rewards as a checkpoint 
+    if step%500==0:
+        plt.plot(ep_rewards)
 
 #%% Save Model
-agent.model.save(model_filename)
+agent.target_model.save(model_filename1)
 #agent.save_weights(weights_filename)
 #%% Load Model
-loaded_model = load_model("dqn_model.h5")
+loaded_model = load_model("dqn_model1.h5")
 
 
 def get_qs_test(loaded_model,state):
@@ -196,24 +208,32 @@ for i in range(test_episode):
             
 plt.plot(env.map_action(all_actions))
 #%% Testing weekly loop
-test_episode=2
+test_episode=1
 all_actions=[]
+batt_cap=[]
 
 #Initial Batttery capacity
-temp_bat_cap=3.4
+temp_bat_cap=0.3
 
 
 for i in range(test_episode):
         current_state=env.reset()
         current_state[3]=temp_bat_cap
         done=False
+        hour=0
         while not done:
             action=np.argmax(get_qs_test(loaded_model,np.array(current_state)))
             new_state,reward,done,_=env.step(action)
             current_state=new_state
             all_actions.append(action)
+            batt_cap.append(current_state[3])
+            print(env.map_action(action), current_state[3],hour)
+            temp_cap=current_state[3]
+            hour+=1
         
         #passing on the battery capacity to the next day    
-        temp_bat_cap=current_state[3]
-
+        temp_bat_cap=temp_cap
+        hour=0
+        
 plt.plot(env.map_action(all_actions))
+#plt.plot(batt_cap)
