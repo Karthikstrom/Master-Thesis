@@ -165,16 +165,16 @@ y_test_rnn=scaler.inverse_transform(y_test_rnn)
 df_final=pd.DataFrame()
 df_final['final_idx']=pd.date_range(start=test_start_idx,periods=len(y_pred_rnn),freq='H')
 df_final.set_index('final_idx',inplace=True)
-df_final['Predicted_diff']=y_pred_rnn
-df_final['Actual_diff']=y_test_rnn
+df_final['Load_Predicted']=y_pred_rnn
+df_final['Load_Actual']=y_test_rnn
 #%%% Metrics and plotting
 # df_final.dropna(inplace=True)
 df_final.dropna(inplace=True)
-metrics(df_final['Actual_diff'],df_final['Predicted_diff'])
+metrics(df_final['Load_Actual'],df_final['Load_Predicted'])
 
 fig,ax=plt.subplots(figsize=(10,5))
-ax.plot(df_final['Actual_diff'],label="Actual",color='b')
-ax.plot(df_final['Predicted_diff'],label="Predicted",color='r')
+ax.plot(df_final['Load_Actual'],label="Actual",color='b')
+ax.plot(df_final['Load_Predicted'],label="Predicted",color='r')
 ax.set_ylabel("Load (kW)") 
 
 #plt.title("Single Step MLP Actual vs Prediction")
@@ -184,3 +184,11 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
 #plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\RNN1.jpeg",format="jpeg",dpi=500)
 
 plt.show()
+
+#%% Wrting predicted values into a master csv file
+
+path=r'C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\4_Single_Step_DNN\pred_cum.csv'
+df_final=df_final['2019-05-01':'2019-06-30']
+# df_final.to_csv(path,index=True)
+
+

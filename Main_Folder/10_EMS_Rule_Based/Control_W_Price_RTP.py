@@ -23,18 +23,16 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from Essential_functions import load_wholedata
+from Essential_functions import load_wholedata,real_load
 from Cost_analysis import COE
 from Battery_Functions import pb_in_func,pb_out_func,SOC
 
 #%% Read data
 
-df= load_wholedata()
+df= real_load()
 df=df[df.index.year==2019]
 
-
-#adding pv penetration 
-df['PV']=7*df['PV']
+df=df['2019-05-01':'2019-06-30']
 #%% Battery specifications
 
 #battery capacity

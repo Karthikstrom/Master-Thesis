@@ -30,18 +30,46 @@ df.dropna(inplace=True)
 print("Number of duplicated index = ",len(df)-len(df.index.unique()))
 print("Number of nan values = ",df.isnull().sum()[0])
 #%% Getting the differences to get the absolute value
-df['grid_import']=df['grid_import'].diff()
+#df['grid_import']=df['grid_import'].diff()
 #%% Removing Nan values
-df.dropna(inplace=True)
+#df.dropna(inplace=True)
 #%% Plotting the whole data
-fig,a1=plt.subplots(figsize=(10,5))
-a1.plot(df.loc['22-08-2009':'28-08-2009'])
+fig,a1=plt.subplots(figsize=(12,7))
+a1.plot(df['PV'].loc['2019-06-03':'2019-06-10'])
 
 a1.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
-#plt.title("Clean data sample for a week")
-plt.ylabel("Load (KW)")
-#plt.tight_layout()
-#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\Week_data2.jpeg",format="jpeg",dpi=500)
+#a1.set_xlabel("Time",fontsize=24,**csfont)
+a1.set_ylabel("PV Generation (Kw)",fontsize=24,**csfont)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.tight_layout()
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Thesis_Report\EDA\ts_pv.jpeg",format="jpeg",dpi=1000)
+plt.show()
+
+#%%
+fig,a1=plt.subplots(figsize=(12,7))
+a1.plot(df['RTP'].loc['2019-06-03':'2019-06-10'])
+
+a1.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
+#a1.set_xlabel("Time",fontsize=24,**csfont)
+a1.set_ylabel("Price (\u20AC/Kw)",fontsize=24,**csfont)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.tight_layout()
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Thesis_Report\EDA\ts_price.jpeg",format="jpeg",dpi=1000)
+plt.show()
+
+#%%
+fig,a1=plt.subplots(figsize=(12,7))
+a1.plot(df['Load'].loc['2019-06-03':'2019-06-10'])
+
+a1.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
+#a1.set_xlabel("Time",fontsize=24,**csfont)
+a1.set_ylabel("Load (Kw)",fontsize=24,**csfont)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.tight_layout()
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Thesis_Report\EDA\ts_load.jpeg",format="jpeg",dpi=1000)
 plt.show()
 
 #%% Weekly average
@@ -61,7 +89,7 @@ ax.set_ylabel("PV Generated (Kw)",fontsize=24,**csfont)
 plt.xticks(x_pos, x_lables)
 plt.yticks(fontsize=20,**csfont)
 plt.xticks(fontsize=20,**csfont)
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\pv_ov.jpeg",format="jpeg",dpi=1000)
+#plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Mid_Term_Presentation\Common_plots\pv_ov.jpeg",format="jpeg",dpi=1000)
 plt.show()
 #%% Plotting weekly average
 fig,bx=plt.subplots()
@@ -382,9 +410,45 @@ plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\MAPE
 plt.show()
 
 #%% Density plot of the data
-fig,a2=plt.subplots(figsize=(10,5))
+fig,a2=plt.subplots(figsize=(12,7))
 a2=sns.distplot(df['Load'])
-a2.set_xlabel('Load (kW)')
+a2.set_xlabel("Load (Kw)",fontsize=24,**csfont)
+a2.set_ylabel("Density",fontsize=24,**csfont)
 plt.xlim(0,2.5)
-plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\kde_plot.jpeg",format="jpeg",dpi=500)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.tight_layout()
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Thesis_Report\EDA\den_load.jpeg",format="jpeg",dpi=1000)
+plt.show()
+
+#%%
+
+fig,a2=plt.subplots(figsize=(12,7))
+a2=sns.distplot(df['RTP'])
+a2.set_xlabel("Price (\u20AC/Kw)",fontsize=24,**csfont)
+a2.set_ylabel("Density",fontsize=24,**csfont)
+plt.xlim(0,2.5)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.tight_layout()
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Thesis_Report\EDA\den_price.jpeg",format="jpeg",dpi=1000)
+plt.show()
+
+#%%
+fig,a2=plt.subplots(figsize=(12,7))
+a2=sns.distplot(df['PV'])
+a2.set_xlabel("PV Generated (Kw)",fontsize=24,**csfont)
+a2.set_ylabel("Density",fontsize=24,**csfont)
+plt.xlim(0,1.5)
+plt.yticks(fontsize=20,**csfont)
+plt.xticks(fontsize=20,**csfont)
+plt.tight_layout()
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Thesis_Report\EDA\den_pv.jpeg",format="jpeg",dpi=1000)
+plt.show()
+
+#%% Heatmap
+from Essential_functions import corr_heat_map
+plt.subplots(figsize=(20,11))
+corr_heat_map(df)
+plt.savefig(r"C:\Users\Karthikeyan\Desktop\Results\Report\heat_map.jpeg",format="jpeg",dpi=1000)
 plt.show()

@@ -61,57 +61,6 @@ def split_sequence_multi(data,look_back,future_steps):
     return np.asarray(X),np.asarray(y)
 def root_mean_squared_error(y_true, y_pred):
         return K.sqrt(K.mean(K.square(y_pred - y_true)))
-def RNN_model(train=train,test=test,val=val,neurons1=50,neurons2=20):
-    
-    neurons1=round(neurons1)
-    neurons2=round(neurons2)
-    #learning_rate=round(learning_rate)
-    
-    
-    #lr=[0.1,0.001,0.0001,0.00001]
-    #learning_rate=lr[learning_rate]
-    
-    scaler=StandardScaler()
-    scaler=scaler.fit(train)
-
-    train=scaler.transform(train)
-    test=scaler.transform(test)
-    val=scaler.transform(val)
-    
-    ip_steps=24
-    op_steps=1
-    train_x,train_y=split_sequence_multi(train,ip_steps,op_steps)
-    val_x,val_y=split_sequence_multi(val,ip_steps,op_steps)
-    test_x,test_y=split_sequence_multi(test,ip_steps,op_steps)
-
-    train_y=np.reshape(train_y,(train_y.shape[0],train_y.shape[1]))
-    val_y=np.reshape(val_y,(val_y.shape[0],val_y.shape[1]))
-    test_y=np.reshape(test_y,(test_y.shape[0],test_y.shape[1]))
-    
-    
-    rnn_model=Sequential()
-    rnn_model.add(SimpleRNN(neurons1, activation='relu', input_shape=(train_x.shape[1], train_x.shape[2])))
-    rnn_model.add(Dense(neurons2,activation='relu'))
-    rnn_model.add(Dense(op_steps))
-    rnn_model.compile(loss=root_mean_squared_error, optimizer='adam')
-    rnn_model.summary()
-
-    rnn_history =rnn_model.fit(train_x,train_y, validation_data=(val_x, val_y), epochs=70, verbose=2)
-    
-    rnn_predict=rnn_model.predict(test_x)
-    y_pred_rnn=rnn_predict
-    y_test_rnn=test_y
-
-    y_pred_rnn=np.reshape(y_pred_rnn,(-1,1))
-    y_test_rnn=np.reshape(y_test_rnn,(-1,1))
-
-    y_pred_rnn=scaler.inverse_transform(y_pred_rnn)
-    y_test_rnn=scaler.inverse_transform(y_test_rnn)
-    
-
-    rmse=np.sqrt(mean_squared_error(y_test_rnn,y_pred_rnn))    
-
-    return -rmse
 #%% Normalizing the data
 scaler=StandardScaler()
 scaler=scaler.fit(train)
@@ -184,3 +133,9 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
 #plt.savefig(r"C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\13_Plots\Conference_ISGT\RNN1.jpeg",format="jpeg",dpi=500)
 
 plt.show()
+
+#%%
+# path=r'C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\4_Single_Step_DNN\Prediction_csv\price.csv'
+# df_final=df_final['2019-05-01':'2019-06-30']
+# df_final['idx']=df_final.index
+# df_final.to_csv(path,index=True)

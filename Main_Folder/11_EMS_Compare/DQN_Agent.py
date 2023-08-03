@@ -25,17 +25,17 @@ from keras.models import load_model
 env=EMSenv()
 #%% Hyperparameter
 Replay_memory_size=30000
-Episodes=1000
-Min_replay_memory=1000
+Episodes=700
+Min_replay_memory=4000
 minibatch_size=32
 Target_update_every=100
-Discount_rate=0.01
+Discount_rate=0.1
 model_filename = 'real_load.h5'
 
 
 # Exploration settings
 epsilon = 1  # not a constant, going to be decayed
-EPSILON_DECAY = 0.99
+EPSILON_DECAY = 0.995 #0.997-700 episodic learning
 MIN_EPSILON = 0.1
 epsilon_dec=[] 
 #%% Creating the agent
@@ -53,15 +53,19 @@ class DQNAgent:
         
         self.target_update_counter=0
         
+        #Main Network loss counter
+        self.nn_loss=[]
         
     def create_model(self):
         model=Sequential()
-        model.add(Dense(128, input_shape=env.observation_space.shape))
+        model.add(Dense(64, input_shape=env.observation_space.shape,activation='relu'))
         model.add(Dropout(0.2))
-        model.add(Dense(64,activation='relu'))
+        model.add(Dense(128,activation='relu'))
+        model.add(Dropout(0.2))
+        model.add(Dense(128,activation='relu'))
         model.add(Dense(env.action_space.n,activation="linear"))
         
-        model.compile(loss=Huber(),optimizer=Adam(learning_rate=0.0001))
+        model.compile(loss='mse',optimizer=Adam(learning_rate=0.0001))
         
         return model
     
@@ -72,7 +76,7 @@ class DQNAgent:
         
     def get_qs(self,state):
         #model.predict always returns a list so [0]
-        prediction=self.model.predict(np.array(state).reshape(-1,*state.shape),verbose=0)[0]
+        prediction=self.target_model.predict(np.array(state).reshape(-1,*state.shape),verbose=0)[0]
         return prediction
     
     def train(self,terminal_state,step):
@@ -124,7 +128,8 @@ class DQNAgent:
             y.append(current_qs)
             
         # Fit on all samples as one batch, log only on terminal state
-        self.model.fit(np.array(X), np.array(y), batch_size=minibatch_size, verbose=0, shuffle=False)
+        hist=self.model.fit(np.array(X), np.array(y), batch_size=minibatch_size, verbose=0, shuffle=False)
+        self.nn_loss.append(hist.history['loss'])
         
         # Update target network counter every episode
         if terminal_state:
@@ -178,13 +183,26 @@ for episode in tqdm(range(1,Episodes+1),ascii=True,unit="episode"):
         
     if ep%100==0:
         plt.plot(ep_rewards)
+        plt.show()
+        plt.plot(agent.nn_loss)
+        plt.show()
+        agent.target_model.save(model_filename)
+        
+        
+#%% Epsilon checker
 
+# for i in range(10000):
+#     if epsilon > MIN_EPSILON:
+#         epsilon *= EPSILON_DECAY
+#         epsilon = max(MIN_EPSILON, epsilon)
+#         epsilon_dec.append(epsilon)
 
+# plt.plot(epsilon_dec)
 #%% Save Model
 agent.target_model.save(model_filename)
 #agent.save_weights(weights_filename)
 #%% Load Model
-loaded_model = load_model(model_filename)
+loaded_model = load_model('real_load.h5')
 
 
 def get_qs_test(loaded_model,state):
@@ -208,19 +226,20 @@ test_episode=3
 all_actions=[]
 
 #Initial Batttery capacity
-temp_bat_cap=3.4
+temp_bat_cap=4
 batt_cap=[]
 
 for i in range(test_episode):
-        current_state=env.reset()
+        current_state=env.train_reset()
         current_state[3]=temp_bat_cap
         done=False
         while not done:
+            
+            batt_cap.append(current_state[3])
             action=np.argmax(get_qs_test(loaded_model,np.array(current_state)))
             new_state,reward,done,_=env.step(action)
             current_state=new_state
             all_actions.append(action)
-            batt_cap.append(current_state[3])
             print(env.map_action(action))
         
         #passing on the battery capacity to the next day    

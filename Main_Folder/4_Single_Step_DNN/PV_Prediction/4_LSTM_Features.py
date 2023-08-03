@@ -189,3 +189,8 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b\n%Y\n%a'))
 plt.savefig(r"C:\Users\Karthikeyan\Desktop\Thesis\Plots\Price_Prediction\MLP.jpeg",format="jpeg",dpi=1000)
 
 plt.show()
+#%%
+# path=r'C:\Users\Karthikeyan\Desktop\Github\Master-Thesis\Main_Folder\4_Single_Step_DNN\Prediction_csv\pv.csv'
+# df_final=df_final['2019-05-01':'2019-06-30']
+# #df_final['idx']=df_final.index
+# df_final.to_csv(path,index=True)

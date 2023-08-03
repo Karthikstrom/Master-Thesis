@@ -68,6 +68,26 @@ def load_wholedata():
 
     return df
 
+def DA_prices():
+    df=pd.read_excel(r"C:\Users\Karthikeyan\Desktop\Thesis\Database\NL_DA_Prices_Aggregate.xlsx")
+    # Specify the start and end date-time strings
+    # start_date = "01.01.2017 00:00"
+    # end_date = "20.07.2023 05:00"
+    
+    # # Convert the date-time strings to pandas Timestamp objects
+    # start_timestamp = pd.Timestamp(start_date)
+    # end_timestamp = pd.Timestamp(end_date)
+    
+    # # Generate the date-time index with an hourly frequency using pd.date_range
+    # df['datetime_index'] = pd.date_range(start=start_timestamp, end=end_timestamp, freq='H')
+    
+    # # Set the 'datetime_index' column as the index of the DataFrame
+    # df.set_index('datetime_index', inplace=True)
+    
+    df.drop('MTU (CET/CEST)',axis=1,inplace=True)
+    df.columns=['RTP']
+    return df
+
 def load_data2():
     df=pd.read_csv(r"C:\Users\Karthikeyan\Desktop\Thesis\Database\kaggle_household_power_consumption.txt",delimiter=';')
     df['date_time']=pd.to_datetime(df['Date']+' '+df['Time'])
@@ -202,6 +222,7 @@ def corr_heat_map(df):
     corr_mat=df.corr()
     sns.heatmap(corr_mat, cmap='Greens')
     plt.xticks(rotation=55)
+    
     
 #%% Correlation heat map
 # df=real_load()

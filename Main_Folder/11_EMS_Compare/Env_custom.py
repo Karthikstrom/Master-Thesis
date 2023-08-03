@@ -28,7 +28,7 @@ df=real_load()
 df=df['2019-05-01':'2019-06-07']
 df['Hour']=df.index.hour
 #%% Normalizing historic observations
-df[:] = minmax_scale(df)
+#df[:] = minmax_scale(df)
 #%% Loading packages
 import gym
 from gym import spaces
@@ -119,7 +119,7 @@ class EMSenv(gym.Env):
         
         
         #Set the start date number
-        self.test_day_counter=132
+        self.test_day_counter=130
         
     def map_action(self,action):
         if (action==51)|(action==50):
@@ -136,7 +136,7 @@ class EMSenv(gym.Env):
         """
         
         #Generating a random number to get a random day in the training year
-        self.random_day=random.randint(122,122+30)
+        self.random_day=random.randint(122,129)
         
         #Index from 23.00 from the previous day to the end of next day
         #So that decisions are taken from 00:00 and not 01.00
@@ -233,15 +233,15 @@ class EMSenv(gym.Env):
         grid_t=next_load-next_pv+battery_action
         
         #Reward fro battery limits
+        #Try using Max and min values
         if (next_battery_cap>=self.min_battery_cap) & (next_battery_cap<=self.max_battery_cap):
             reward_1=0
         else:
-            reward_1=-1000
-        #
+            reward_1=-5
         
         
-        reward=-5*(next_price*grid_t)+reward_1
-         
+        reward= -(next_price*grid_t) + reward_1
+        
         done=False
         
         if self.hour_num == self.num_of_time_steps:
@@ -295,7 +295,7 @@ class EMSenv(gym.Env):
 #         action=test_env.action_space.sample()
 #         obs,r,done,_=test_env.step(action)
 #         print(r)
-# #%%
+#%%
 
 # num_actions = test_env.action_space.n
 # for action in range(num_actions):
